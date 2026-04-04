@@ -81,8 +81,11 @@ BookNest/
 - Amina Saeed — Frontend Developer
 - Yasmina Mohamed — Frontend Developer
 - Abdulrahman Atef — AI & ML Engineer
+- Abdulrahman Tarek — AI & ML Engineer
 - Ahmed Nabil — AI & ML Engineer
 - Shawkat Elgrwany — UI/UX Designer
+- Muhammed Mosa - Backend Developer
+- Muhammed Amer - Backend Developer
 
 ## License
 
