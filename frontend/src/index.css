@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400..700;1,400..700&family=Outfit:wght@100..900&display=swap');
+
+:root {
+  --main-color: #4A3D2F;
+  --light-color: #f0f3f2;
+  --shadow: rgba(145, 158, 171, .2) 0px 2px 4px -1px, rgba(145, 158, 171, .14) 0px 4px 5px 0px, rgba(145, 158, 171, .12) 0px 1px 10px 0px;
+  --font-family: "Arimo", sans-serif;
+  --body-font: "Outfit", sans-serif;
+  --rating-color: #ffc908;
+}
+
+.header-font{
+  font-family: var(--font-family);
+}
+body{
+  font-family: var(--body-font);
+  /* background-color: #F8F6F3; */
+}
+
+
+ a{
+  text-decoration: none;
+}
+
+a.special:hover {
+  color: #D4A574;
+}
+
+a:hover{
+  color: #D4A574;
+}
+
+
+/*
+.rating-color {
+  color: var(--rating-color);
+}
+
+.product:hover {
+  box-shadow: var(--shadow);
+}
+
+.product .btn {
+  transition: transform 1s, opacity 1s;
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+.product:hover .btn {
+  opacity: 1;
+  transform: translateY(0%);
+
+} */
+
+/* .font-sm {
+  font-size: 14px;
+}
+
+.text-main {
+  color: var(--main-color);
+}
+
+.text-main-light {
+  color: var(--light-color);
+}
+
+.bg-main {
+  background-color: var(--main-color) !important;
+}
+
+.bg-main-light {
+  background-color: var(--light-color) !important;
+} */
+
+
+/* h1 {
+  font-size: 3.2em;
+  line-height: 1.2;
+} */
+
+/* h2 {
+  font-size: 2em;
+  line-height: 1.2;
+} */
+
+/* button{
+  @apply px-3.5 py-1.5 mx-1 my-2 rounded-xl ;
+  
+}
+.active{
+  color: var(--main-color);
+
+} */
+
+.slick-prev::before,
+.slick-next::before {
+  color: #795420 !important;
+  font-size: 30px !important;
+  opacity: 1 !important;
+  position: absolute;
+  right: 1px;
+}
+
