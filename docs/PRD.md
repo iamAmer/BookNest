@@ -20,7 +20,7 @@
 ## 1) Product Name
 
 **Book Nest**
-A smart reading platform for Arabic native speakers learning English as a second language.
+An intelligent reading platform designed for Arabic native speakers and individuals learning English as a second language, offering a personalized and adaptive reading experience.
 
 ## 2) Product Vision
 
@@ -28,7 +28,7 @@ Help users read real English content without getting stuck, by turning difficult
 
 ## 3) Problem Statement
 
-Arabic learners often face three main problems:
+Learners often face three main problems:
 
 * English content is too hard, so they stop reading.
 * Dictionary lookup breaks reading flow.
@@ -43,32 +43,27 @@ Additional pain points addressed:
 
 The product is no longer a basic book-reading app. It is an **Adaptive Reading Engine** that:
 
-* lets users upload text or choose content from a marketplace,
+* recommends books based on user behavior and level.
 * displays the text inside the app as interactive content,
 * simplifies difficult sentences based on the user's level,
 * explains hard words in context,
 * saves vocabulary automatically,
 * reviews learned words later,
-* recommends books based on user behavior and level.
 
 ## 5) Target Users
 
 Primary users:
 
-* Arabic native English learners
+* All English learners
 * Students stuck between beginner apps and real English content
 * University students and professionals who need English for work/study
+* Children learning English through reading
 
 Secondary users:
 
 * Teachers
 * Language centers
 * Content curators
-
-Future users (post-MVP):
-
-* Children learning English through reading
-* Parents looking for guided reading tools
 
 ## 6) Product Goals
 
@@ -93,15 +88,14 @@ The product will not focus on:
 ## 8) Core User Journey
 
 1. User signs up and selects or is assessed for English level.
-2. User uploads or pastes text to read.
-3. Text loads inside the app in a reactive reading view.
+2. User discovers books marketplace.
+3. User select a book.
 4. User reads normally.
 5. User taps a sentence or word they do not understand.
 6. The app shows:
 
    * simplified sentence,
    * short explanation,
-   * Arabic meaning if needed,
    * related vocabulary.
 7. Important words are saved automatically.
 8. The app later asks review questions based on saved vocabulary.
@@ -114,7 +108,6 @@ The product will not focus on:
 
 Users can get reading material from:
 
-* **Upload content**: paste text or upload a document (TXT, PDF, DOCX).
 * **Starter library**: a small curated set of public domain texts organized by CEFR level and topic.
 
 ### B. Reactive Reading View
@@ -147,7 +140,6 @@ Example:
 When a user taps a word:
 
 * the app shows a short meaning,
-* gives Arabic support when useful,
 * shows the word in context,
 * optionally shows an example sentence.
 
@@ -179,7 +171,7 @@ The system adjusts content and simplification based on the user's estimated Engl
 * C1 (Advanced)
 * C2 (Proficient)
 
-### H. Marketplace (Future Scope)
+### H. Marketplace
 
 A curated content space where users can:
 
@@ -188,8 +180,6 @@ A curated content space where users can:
 * continue previously started content,
 * save items for later,
 * receive AI-driven personalized book recommendations based on reading history, behavior, and ratings.
-
-**Note:** Deferred to post-MVP pending content licensing strategy.
 
 ### I. Progress Tracking
 
@@ -226,16 +216,6 @@ After finishing a book or reading session:
 * immediate score feedback,
 * promotes active learning and ensures comprehension.
 
-### L. AI Book Discovery Chatbot (Future Scope)
-
-An integrated AI assistant that helps users:
-
-* find books naturally through conversation,
-* get recommendations based on preferences and level,
-* explore genres and topics.
-
-**Note:** Deferred to post-MVP. MVP uses filter-based book discovery (by level, topic, length) instead.
-
 ## 10) AI Capabilities
 
 Book Nest uses AI in three main areas:
@@ -255,14 +235,12 @@ Book Nest uses AI in three main areas:
 During reading, AI also:
 
 * simplifies difficult sentences to the user's level,
-* explains words in context with Arabic support,
 * identifies likely hard vocabulary for saving,
 * supports level-aware reading guidance.
 
 ### AI should not:
 
 * replace the whole learning flow,
-* act like a random chatbot,
 * generate unnecessary features,
 * distract from reading.
 
@@ -296,7 +274,6 @@ Content must be:
 
 ### Licensing (MVP)
 
-* MVP supports **user-uploaded content only** — users bring their own text.
 * Starter library uses **public domain texts only** (e.g., Project Gutenberg, OpenStax).
 * Marketplace with licensed content requires a **separate licensing strategy** defined before implementation.
 * User-uploaded content must include a copyright acknowledgment step.
@@ -310,15 +287,14 @@ Compared to existing language learning reading platforms:
 | Click-to-translate words | Yes | Yes | Yes | Partial |
 | Vocabulary tracking | Yes | Yes | Yes | No |
 | AI sentence simplification | Yes | No | No | No |
-| Arabic-specific support | Yes | No | No | Limited |
 | CEFR level adaptation | Yes | Partial | No | No |
 | Auto vocabulary saving | Yes | Manual | Yes | No |
 | Post-reading quizzes | Yes | No | No | No |
 | Free tier | Yes | Limited | Yes | Limited |
 
-**Real differentiator:** Book Nest is the only platform built specifically for Arabic native speakers learning English, with AI-powered sentence simplification and Arabic-contextual word explanations. Competitors are generic — they do not account for Arabic→English learner-specific challenges (false friends, grammar transfer, common mistakes).
+**Real differentiator:** Book Nest is the only platform built specifically for All learning English, with AI-powered sentence simplification and contextual word explanations. Competitors are generic — they do not account for English learner-specific challenges (false friends, grammar transfer, common mistakes).
 
-**Moat strategy:** Build a simplification quality feedback loop (user 👍/👎 ratings) to create a proprietary dataset that improves simplification quality over time for Arabic learners specifically.
+**Moat strategy:** Build a simplification quality feedback loop (user 👍/👎 ratings) to create a proprietary dataset that improves simplification quality over time for English learners.
 
 ## 13.5) Monetization
 
@@ -343,7 +319,7 @@ Compared to existing language learning reading platforms:
 * Custom content curation for institutions
 
 ### Cost Control
-* AI costs are the primary variable expense. Target: AI cost per active user < 40% of subscription revenue.
+* AI costs are the primary variable expense.
 * Aggressive caching, pre-computation, and model tiering are mandatory, not optional.
 
 ## 13.6) AI Cost Management
@@ -495,10 +471,8 @@ The system must support (MVP):
 
 * user registration and login,
 * level selection or assessment,
-* text upload (paste or file),
 * reading inside the app with interactive sentence/word tokens,
 * sentence simplification on demand (level-aware),
-* word explanation with Arabic support,
 * automatic vocabulary saving,
 * vocabulary review flow (spaced repetition),
 * post-reading comprehension quizzes,
@@ -513,7 +487,7 @@ The system must support (MVP):
 * **Security:** Secure authentication and data protection.
 * **Reliability:** Consistent behavior across sessions.
 * **Scalability:** Ability to handle growing users and content.
-* **Usability:** Clean, intuitive interface for Arabic native users.
+* **Usability:** Clean, intuitive interface.
 
 ## 16) User Experience Requirements
 
@@ -522,7 +496,6 @@ The reading experience must be:
 * fast,
 * clean,
 * distraction-free,
-* easy for Arabic native users,
 * interactive without breaking reading flow,
 * readable on mobile and desktop.
 
@@ -553,7 +526,6 @@ It is:
 | No backend engineer on team | Critical | Reassign one AI engineer to full-stack, or recruit a backend developer immediately |
 | Content licensing blocks marketplace | High | MVP uses user uploads + public domain only. Licensing strategy defined before marketplace launch |
 | Scope creep delays graduation deadline | Critical | Strict MVP scope (5 features). Everything else is explicitly marked Future Scope |
-| Users prefer existing tools (LingQ, etc.) | Medium | Double down on Arabic-specific features. No competitor targets Arabic→English specifically |
 | Product becomes a generic reader with badges | Medium | Keep focus on adaptive reading. Defer gamification. Measure simplification quality as north-star KPI |
 
 ## 20) MVP Scope
@@ -561,39 +533,20 @@ It is:
 The first version includes **only** these features:
 
 1. **Account creation + level assessment** — sign up, select or test into CEFR level.
-2. **Text upload + interactive reading view** — paste or upload text, render as interactive sentence/word tokens.
-3. **Sentence simplification** — tap a sentence, get a level-aware simpler version. Original text preserved.
-4. **Word explanation + auto vocabulary saving** — tap a word, get definition + Arabic support. Important words saved automatically.
-5. **Basic progress tracking** — reading sessions, words learned, streaks.
+2. **Sentence simplification** — tap a sentence, get a level-aware simpler version. Original text preserved.
+3. **Word explanation + auto vocabulary saving** — tap a word, get definition. Important words saved automatically.
+4. **Basic progress tracking** — reading sessions, words learned, streaks.
 
 **Supporting (required for MVP):**
 * Vocabulary review flow (spaced repetition)
 * Post-reading comprehension quizzes
 * Simplification quality feedback (👍/👎)
 * Starter library (public domain texts, pre-simplified)
-
-## 21) Future Scope
-
-Post-MVP features (prioritized):
-
-**Phase 2 (next after MVP):**
 * Marketplace with licensed content (requires licensing strategy)
 * AI-driven book recommendations
 * Filter-based book discovery (by level, topic, length)
-* Offline reading for downloaded content
 * Advanced spaced repetition with FSRS algorithm
-
-**Phase 3:**
-* AI book discovery chatbot
-* Kids Mode (separate UX, content, safety compliance)
-* Teacher dashboards
-* School / language center B2B features
-* Voice reading support
-* Pronunciation feedback
-* Smarter level adaptation (dynamic, not just initial assessment)
-* Broader content library
-* Arabic→English learner-specific features (false friends database, common mistake patterns)
 
 ## 22) Final Product Definition
 
-Book Nest is an adaptive reading platform for Arabic native English learners that helps users understand real English content by simplifying difficult text, explaining vocabulary in context with Arabic support, and saving words automatically for later review — all inside a reactive reading experience. Powered by AI for sentence simplification, word explanation, CEFR classification, and comprehension assessment, Book Nest's core differentiator is its Arabic-specific focus: no other reading platform is built specifically for the challenges Arabic speakers face when learning English.
+Book Nest is an adaptive reading platform for All English learners that helps users understand real English content by simplifying difficult text, explaining vocabulary in context, and saving words automatically for later review — all inside a reactive reading experience. Powered by AI for sentence simplification, word explanation, CEFR classification, and comprehension assessment.
