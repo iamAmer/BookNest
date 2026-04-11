@@ -7,7 +7,7 @@ An adaptive reading platform for Arabic native English learners. Book Nest helps
 This is a monorepo with three services:
 
 - **frontend/** — TanStack Start (React + Vite + SSR) with TanStack Router, Query, AI, and Form
-- **backend/** — Bun service with ElysiaJS for API, auth, and database operations (Eden treaty for end-to-end type safety)
+- **backend/** — Node.js service with Hono for API, auth, and database operations (Hono RPC client for end-to-end type safety)
 - **ai-service/** — Python FastAPI service for AI/ML tasks (sentence simplification, CEFR classification, quiz generation)
 
 ## Tech Stack
@@ -15,7 +15,7 @@ This is a monorepo with three services:
 | Layer | Technology |
 |---|---|
 | Frontend | TanStack Start, React, Vite, Tailwind CSS |
-| Backend | Bun, ElysiaJS, TypeScript |
+| Backend | Node.js, Hono, TypeScript |
 | AI Service | Python, FastAPI, uv |
 | Database | Supabase (PostgreSQL) |
 | Auth | Supabase Auth |
@@ -25,7 +25,8 @@ This is a monorepo with three services:
 
 ### Prerequisites
 
-- Bun (for frontend and backend)
+- Node.js 20+ (for backend)
+- npm/pnpm/yarn (for frontend and backend)
 - Python 3.12+ with uv (for AI service)
 - Supabase project (for database and auth)
 
@@ -33,16 +34,16 @@ This is a monorepo with three services:
 
 ```bash
 cd frontend
-bun install
-bun dev
+npm install
+npm run dev
 ```
 
 ### Backend
 
 ```bash
 cd backend
-bun install
-bun dev
+npm install
+npm run dev
 ```
 
 ### AI Service

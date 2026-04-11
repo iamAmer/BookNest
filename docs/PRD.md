@@ -9,9 +9,11 @@
   * Amina Saeed — Frontend Developer
   * Yasmina Mohamed — Frontend Developer
   * Abdulrahman Atef — AI & ML Engineer
+  * Abdulrahman Tarek — AI & ML Engineer
   * Ahmed Nabil — AI & ML Engineer
   * Shawkat Elgrwany — UI/UX Designer
-* **Gap:** No dedicated backend engineer. One AI engineer must take on full-stack responsibilities (API, database, auth, deployment), or a backend role must be added.
+  * Muhammed Mosa — Backend Developer
+  * Muhammed Amer — Backend Developer
 
 ---
 
@@ -372,8 +374,8 @@ Compared to existing language learning reading platforms:
 The system is split into three layers based on responsibility:
 
 * **Frontend (TanStack Start)** — React-based full-stack application. Handles UI, routing, data fetching (TanStack Query), and **direct AI streaming calls** via TanStack AI for lightweight text features (word explanations, real-time text display).
-* **Bun Service (Core Backend)** — Handles authentication, user management, reading sessions, vocabulary storage, progress tracking, quiz scoring, and all CRUD operations. Built with ElysiaJS on Bun. Elysia provides ergonomic, type-safe routing with Eden treaty for end-to-end type safety, plus native TypeScript execution without transpilation.
-* **Python Service (AI/ML Backend)** — Handles complex AI tasks: sentence simplification, CEFR classification, and quiz generation. Built with FastAPI. Exposes REST endpoints that the Bun service calls. Managed with `uv` for fast dependency resolution and environment management.
+* **Node.js Service (Core Backend)** — Handles authentication, user management, reading sessions, vocabulary storage, progress tracking, quiz scoring, and all CRUD operations. Built with Hono on Node.js. Hono provides ergonomic, type-safe routing with Hono RPC (client) for end-to-end type safety, plus native TypeScript execution via `tsx`.
+* **Python Service (AI/ML Backend)** — Handles complex AI tasks: sentence simplification, CEFR classification, and quiz generation. Built with FastAPI. Exposes REST endpoints that the Node.js service calls. Managed with `uv` for fast dependency resolution and environment management.
 
 ### AI Call Routing
 
@@ -382,18 +384,18 @@ Not all AI calls go through the same path:
 | Feature | Where It Runs | How |
 |---|---|---|
 | **Word explanation** | Frontend (TanStack AI) | Direct LLM API call with streaming response |
-| **Sentence simplification** | Python service | Bun → FastAPI → LLM → structured JSON response |
-| **CEFR classification** | Python service | Bun → FastAPI → LLM (on content upload) |
-| **Quiz generation** | Python service | Bun → FastAPI → LLM (after reading session) |
+| **Sentence simplification** | Python service | Node.js → FastAPI → LLM → structured JSON response |
+| **CEFR classification** | Python service | Node.js → FastAPI → LLM (on content upload) |
+| **Quiz generation** | Python service | Node.js → FastAPI → LLM (after reading session) |
 
 **Why word explanations run in the frontend:** TanStack AI provides built-in streaming hooks (`useChat`, `useCompletion`) that render LLM responses token-by-token in real time. For word explanations, this gives instant, smooth UX without an extra backend hop. The frontend calls the LLM provider directly using TanStack AI's adapter system.
 
 ### Communication Flow
 
 * **Frontend → LLM Provider:** TanStack AI calls LLM APIs directly for streaming text features (word explanations)
-* **Frontend → Bun:** Standard REST API calls for data operations (auth, vocabulary, progress)
-* **Bun → Python:** Internal HTTP requests for complex AI tasks (simplification, classification, quizzes)
-* **Bun → Supabase:** Direct database operations via Supabase client or Bun's built-in database drivers
+* **Frontend → Node.js:** Standard REST API calls for data operations (auth, vocabulary, progress)
+* **Node.js → Python:** Internal HTTP requests for complex AI tasks (simplification, classification, quizzes)
+* **Node.js → Supabase:** Direct database operations via Supabase client or `pg` driver
 
 ### Type Safety
 
@@ -404,7 +406,7 @@ Not all AI calls go through the same path:
 ### Database
 
 * **Supabase (PostgreSQL)** — Single database for all application data
-* Managed by the Bun service using Bun's built-in PostgreSQL driver or Supabase client
+* Managed by the Node.js service using `pg` driver or Supabase client
 * Tables: users, reading_sessions, vocabulary, reviews, quizzes, content, progress
 * Supabase provides auth, REST API, and real-time capabilities out of the box
 
@@ -419,12 +421,13 @@ Not all AI calls go through the same path:
 
 **Framework-first principle:** The frontend should maximize use of TanStack's built-in capabilities before reaching for external libraries. TanStack Start already provides SSR, routing, data fetching, AI streaming, and form management as a cohesive ecosystem. External dependencies should only be added when TanStack does not provide an equivalent solution. This reduces bundle size, avoids version conflicts, and keeps the codebase consistent with a single design philosophy.
 
-### Backend Stack (Bun)
+### Backend Stack (Node.js)
 
-* **Runtime:** Bun — native TypeScript execution, built-in PostgreSQL/Redis/SQLite drivers
-* **Framework:** ElysiaJS — ergonomic, type-safe routing with Eden treaty for end-to-end type safety
-* **Package Manager:** Bun (built-in, replaces npm/yarn/pnpm)
-* **Key advantages:** No transpilation step, faster dev cycle, Eden treaty provides automatic type inference from backend routes to frontend
+* **Runtime:** Node.js — mature ecosystem, extensive package registry, widespread industry adoption
+* **Framework:** Hono — lightweight, fast, type-safe routing with Hono RPC client for end-to-end type safety
+* **Package Manager:** npm (or pnpm/yarn)
+* **TypeScript execution:** `tsx` — zero-config TypeScript runner for Node.js
+* **Key advantages:** Largest ecosystem, no runtime lock-in, Hono RPC provides automatic type inference from backend routes to frontend
 
 ### Python Stack (uv)
 
@@ -448,7 +451,7 @@ This is a graduation project — it will not go to production. Architecture deci
 
 * **Monorepo** — Single repository with three packages:
   * `frontend/` — TanStack Start application
-  * `backend/` — Bun service (TypeScript)
+  * `backend/` — Node.js service (TypeScript with Hono)
   * `ai-service/` — Python FastAPI service
 * Shared configuration at root level (CI, linting, environment templates)
 
@@ -456,9 +459,9 @@ This is a graduation project — it will not go to production. Architecture deci
 
 * **Supabase Auth** manages user authentication end-to-end
 * Frontend authenticates users via Supabase SDK and receives a JWT
-* JWT is passed to Bun in the `Authorization` header for all API requests
-* Bun validates the JWT via Supabase before processing any request
-* Python AI service receives no auth tokens — it only receives user context (user ID, CEFR level) from Bun when called internally
+* JWT is passed to Node.js in the `Authorization` header for all API requests
+* Node.js validates the JWT via Supabase before processing any request
+* Python AI service receives no auth tokens — it only receives user context (user ID, CEFR level) from Node.js when called internally
 * No custom auth logic needed in any service
 
 ### Text Parsing
@@ -470,11 +473,11 @@ This is a graduation project — it will not go to production. Architecture deci
 
 ### Type Sharing
 
-* **Bun backend is the source of truth** — All shared types (User, ReadingSession, Vocabulary, etc.) are defined in the Bun service
+* **Node.js backend is the source of truth** — All shared types (User, ReadingSession, Vocabulary, etc.) are defined in the Node.js service
 * **Frontend imports directly** — Since both are TypeScript in the same monorepo, the frontend imports types from the backend package with no build step needed
-* **Python gets Pydantic models only for cross-service types** — Types that cross the Bun ↔ Python boundary (request/response shapes for simplification, classification, quiz generation) are auto-generated into Python Pydantic models using `datamodel-code-generator`
+* **Python gets Pydantic models only for cross-service types** — Types that cross the Node.js ↔ Python boundary (request/response shapes for simplification, classification, quiz generation) are auto-generated into Python Pydantic models using `datamodel-code-generator`
 * Python does **not** need types for auth, progress tracking, or frontend-specific shapes — only what it directly receives or returns
-* Ensures API contracts between Bun ↔ Python stay in sync
+* Ensures API contracts between Node.js ↔ Python stay in sync
 * Changes to cross-service types trigger regeneration of Python models
 
 ### AI Error Handling
