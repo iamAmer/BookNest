@@ -4,7 +4,10 @@ import { UserContext } from "../Context/UserContext.jsx";
 
 export default function ProtectedRoute({ children }) {
 
-  const { userToken } = useContext(UserContext);
+  const { userToken,isLoading} = useContext(UserContext);
+  if (isLoading) {
+  return <p>Loading...</p>; // أو spinner
+}
 
   if (!userToken) {
     return <Navigate to="/guestprotected" replace/>;

@@ -19,9 +19,10 @@ export default function GuestProtected() {
                     </ul>
                 </div>
                 <div className='flex flex-col  w-full mt-6'>
-                    <button onClick={()=> {navigate('/register')}} className='bg-gradient-to-b from-[#6B5744] to-[#8B7355] rounded-[26843500px] cursor-pointer shadow-[0_2px_4px_-2px_#0000001A,0_4px_6px_-1px_#0000001A]'>Sign Up for Free</button>
-                    <button onClick={()=> {navigate('/login')}} className='rounded-[26843500px] border-[1.6px] border-[#6B5744] cursor-pointer'>Log In to Your Account</button>
+                    <button onClick={()=> {navigate('/register')}} className='bg-gradient-to-b from-[#6B5744] to-[#8B7355] rounded-[26843500px] cursor-pointer py-2.5 mb-3 text-[#FFFFFF] shadow-[0_2px_4px_-2px_#0000001A,0_4px_6px_-1px_#0000001A]'>Sign Up for Free</button>
+                    <button onClick={()=> {navigate('/login')}} className='rounded-[26843500px] border-[1.6px] border-[#6B5744] py-2.5 cursor-pointer'>Log In to Your Account</button>
                 </div>
+                <button onClick={()=> navigate('/')} className='flex gap-1 justify-center items-center cursor-pointer text-[#6B5744] mt-5'><i class="fa-solid fa-arrow-left"></i>Back to Home</button>
             </div>
             <div className='opacity-60 text-[#6B5744] text-[14px]'><p>Your personal reading sanctuary awaits</p></div>
         </div>
