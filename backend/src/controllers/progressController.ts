@@ -1,121 +1,147 @@
-import { Request, Response } from 'express';
-import { supabase } from '../config/supabase';
+import { Request, Response } from 'express'
+import { query } from '../config/database'
 
 /**
  * Update reading progress
  * @param req - Express request object
  * @param res - Express response object
  */
-export const updateProgress = async (req: Request, res: Response): Promise<void> => {
+export const updateProgress = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
-    const userId = (req as any).user.id;
-    const { bookId, current_page } = req.body;
-    
+    const userId = (req as any).user.id
+    const { bookId, current_page, time_spent_seconds } = req.body
+
     // Validate inputs
     if (!bookId || current_page === undefined) {
-      res.status(400).json({ error: 'Book ID and current page are required' });
-      return;
+      res.status(400).json({ error: 'Book ID and current page are required' })
+      return
     }
-    
+
+    if (typeof current_page !== 'number' || current_page < 0) {
+      res
+        .status(400)
+        .json({ error: 'Current page must be a non-negative number' })
+      return
+    }
+
     // Check if progress entry exists for this user/book
-    const { data: existingProgress, error: fetchError } = await supabase
-      .from('user_progress')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('book_id', bookId)
-      .single();
-    
-    let progressData;
-    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows returned
-      throw fetchError;
-    }
-    
-    if (existingProgress) {
+    const existingResult = await query(
+      'SELECT * FROM user_progress WHERE user_id = $1 AND book_id = $2',
+      [userId, bookId],
+    )
+
+    let progressData
+
+    if (existingResult.rows.length > 0) {
       // Update existing progress
-      const { data: updatedProgress, error: updateError } = await supabase
-        .from('user_progress')
-        .update({ 
-          current_page,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', existingProgress.id)
-        .select()
-        .single();
-      
-      if (updateError) throw updateError;
-      progressData = updatedProgress;
+      const existingProgress = existingResult.rows[0]
+      const updatedTimeSpent =
+        (existingProgress.time_spent_seconds || 0) + (time_spent_seconds || 0)
+
+      const updateResult = await query(
+        'UPDATE user_progress SET current_page = $1, time_spent_seconds = $2, updated_at = NOW() WHERE id = $3 RETURNING *',
+        [current_page, updatedTimeSpent, existingProgress.id],
+      )
+
+      progressData = updateResult.rows[0]
     } else {
       // Create new progress entry
-      const { data: newProgress, error: insertError } = await supabase
-        .from('user_progress')
-        .insert({
-          user_id: userId,
-          book_id: bookId,
-          current_page,
-          is_completed: false
-        })
-        .select()
-        .single();
-      
-      if (insertError) throw insertError;
-      progressData = newProgress;
+      const insertResult = await query(
+        'INSERT INTO user_progress (user_id, book_id, current_page, is_completed, time_spent_seconds) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [userId, bookId, current_page, false, time_spent_seconds || 0],
+      )
+
+      progressData = insertResult.rows[0]
     }
-    
-    // Calculate completion percentage (would need book's total_pages)
-    // For now, we'll just return the progress data
-    // In a full implementation, we'd join with books table to get total_pages
-    
+
+    // Get book info to calculate completion percentage
+    const bookResult = await query(
+      'SELECT total_pages FROM books WHERE id = $1',
+      [bookId],
+    )
+
+    const book = bookResult.rows[0]
+    const completionPercentage = book
+      ? Math.round((progressData.current_page / book.total_pages) * 100)
+      : 0
+
     res.json({
       success: true,
-      data: progressData
-    });
+      data: {
+        ...progressData,
+        completion_percentage: completionPercentage,
+      },
+    })
   } catch (error) {
-    console.error('Error updating progress:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error updating progress:', error)
+    res.status(500).json({ error: 'Internal server error' })
   }
-};
+}
 
 /**
  * Get user's reading progress for a specific book
  * @param req - Express request object
  * @param res - Express response object
  */
-export const getProgress = async (req: Request, res: Response): Promise<void> => {
+export const getProgress = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
-    const userId = (req as any).user.id;
-    const bookId = req.params.bookId;
-    
-    const { data: progress, error } = await supabase
-      .from('user_progress')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('book_id', bookId)
-      .single();
-    
-    if (error && error.code !== 'PGRST116') {
-      throw error;
+    const userId = (req as any).user.id
+    const bookId = req.params.bookId
+
+    if (!bookId) {
+      res.status(400).json({ error: 'Book ID is required' })
+      return
     }
-    
+
+    const result = await query(
+      'SELECT * FROM user_progress WHERE user_id = $1 AND book_id = $2',
+      [userId, bookId],
+    )
+
     // If no progress exists, return default values
-    if (!progress) {
+    if (result.rows.length === 0) {
       res.json({
         success: true,
         data: {
           user_id: userId,
           book_id: bookId,
           current_page: 0,
-          is_completed: false
-        }
-      });
-      return;
+          is_completed: false,
+          time_spent_seconds: 0,
+          completion_percentage: 0,
+        },
+      })
+      return
     }
-    
+
+    const progress = result.rows[0]
+
+    // Get book info to calculate completion percentage
+    const bookResult = await query(
+      'SELECT total_pages FROM books WHERE id = $1',
+      [bookId],
+    )
+
+    const book = bookResult.rows[0]
+    const completionPercentage = book
+      ? Math.round((progress.current_page / book.total_pages) * 100)
+      : 0
+
     res.json({
       success: true,
-      data: progress
-    });
+      data: {
+        ...progress,
+        completion_percentage: completionPercentage,
+      },
+    })
   } catch (error) {
-    console.error('Error fetching progress:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error fetching progress:', error)
+    res.status(500).json({ error: 'Internal server error' })
   }
-};
+}
