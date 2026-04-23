@@ -1,552 +1,476 @@
-# Product Requirements Document (PRD) — Adaptive Reading Platform
+# Product Requirements Document (PRD) — Book Nest Adaptive Reading Platform
 
-## 0) Project Context
+## 1. System Overview
 
-* **Institution:** EELU (The Egyptian E-Learning University)
-* **Academic Year:** 2025–2026
-* **Supervisors:** Dr. Amany Magdy Samy, TA. Maryam Mohamed Atef
-* **Team Members:**
-  * Amina Saeed — Frontend Developer
-  * Yasmina Mohamed — Frontend Developer
-  * Abdulrahman Atef — AI & ML Engineer
-  * Abdulrahman Tarek — AI & ML Engineer
-  * Ahmed Nabil — AI & ML Engineer
-  * Shawkat Elgrwany — UI/UX Designer
-  * Muhammed Mosa — Backend Developer
-  * Muhammed Amer — Backend Developer
+Book Nest is a full-stack platform designed to facilitate English language learning through interactive reading. It uses AI to adapt content to the user's CEFR level (A1-C2).
 
----
+## 2. Technical Stack
 
-## 1) Product Name
+**Frontend:** React.js + Vite (Tailwind CSS for UI)
 
-**Book Nest**
-An intelligent reading platform designed for Arabic native speakers and individuals learning English as a second language, offering a personalized and adaptive reading experience.
+**Backend:** Node.js + Express.js + typescript
 
-## 2) Product Vision
+**Database & Auth:** Supabase (PostgreSQL)
 
-Help users read real English content without getting stuck, by turning difficult text into understandable, interactive reading experiences that adapt to their level.
+**AI Engine:** FastAPI (Python) service for simplification and quiz generation
 
-## 3) Problem Statement
-
-Learners often face three main problems:
-
-* English content is too hard, so they stop reading.
-* Dictionary lookup breaks reading flow.
-* Existing apps are either too childish, too academic, or too generic.
-
-Additional pain points addressed:
-
-* Old teaching methods make learning boring.
-* "Choice overload" — too many books, no guidance on what to read next.
-
-## 4) Core Idea
-
-The product is no longer a basic book-reading app. It is an **Adaptive Reading Engine** that:
-
-* recommends books based on user behavior and level.
-* displays the text inside the app as interactive content,
-* simplifies difficult sentences based on the user's level,
-* explains hard words in context,
-* saves vocabulary automatically,
-* reviews learned words later,
-
-## 5) Target Users
-
-Primary users:
-
-* All English learners
-* Students stuck between beginner apps and real English content
-* University students and professionals who need English for work/study
-* Children learning English through reading
-
-Secondary users:
-
-* Teachers
-* Language centers
-* Content curators
-
-## 6) Product Goals
-
-* Make real English reading easier and less frustrating.
-* Help users learn vocabulary from context.
-* Improve comprehension without forcing users to leave the page.
-* Support both self-learning and guided learning.
-* Create a strong differentiator through adaptive reading, not generic reading.
-* Teach English naturally through reading rather than traditional methods.
-* Prevent "brain rot" by keeping users engaged with meaningful content.
-
-## 7) Non-Goals
-
-The product will not focus on:
-
-* being a general social reading app,
-* copying traditional ebook platforms,
-* being a quiz-only language app,
-* long form PDFs as the main experience,
-* endless gamification that does not support learning.
-
-## 8) Core User Journey
-
-1. User signs up and selects or is assessed for English level.
-2. User discovers books marketplace.
-3. User select a book.
-4. User reads normally.
-5. User taps a sentence or word they do not understand.
-6. The app shows:
-
-   * simplified sentence,
-   * short explanation,
-   * related vocabulary.
-7. Important words are saved automatically.
-8. The app later asks review questions based on saved vocabulary.
-9. After finishing a book or reading session, the user can take a comprehension quiz.
-10. The user's level, vocabulary, and recommendations improve over time.
-
-## 9) Main Product Features
-
-### A. Content Sources (MVP)
-
-Users can get reading material from:
-
-* **Starter library**: a small curated set of public domain texts organized by CEFR level and topic.
-
-### B. Reactive Reading View
-
-Text is not treated like a static PDF viewer. It is loaded into the app as readable, interactive content with:
-
-* sentence-level interaction,
-* word-level interaction,
-* clean reading layout,
-* easy highlighting,
-* adaptive display for simplification and annotations,
-* adjustable fonts and background colors (light/dark modes),
-* note-taking support.
-
-### C. Adaptive Text Simplification
-
-When a sentence is difficult:
-
-* the user can tap it,
-* the app generates a simpler version matched to the user's level,
-* the original text remains available.
-
-Example:
-
-* Original: "The rapid advancement of artificial intelligence has significantly transformed various industries."
-* Simple: "AI has changed many industries a lot."
-
-### D. Word Explanation
-
-When a user taps a word:
-
-* the app shows a short meaning,
-* shows the word in context,
-* optionally shows an example sentence.
-
-### E. Vocabulary Capture
-
-Any word the user interacts with can be:
-
-* saved automatically,
-* grouped into a personal vocabulary list,
-* tagged by reading source and difficulty.
-
-### F. Review System
-
-Saved words are revisited later through:
-
-* short meaning checks,
-* multiple-choice review,
-* contextual recall,
-* spaced repetition style review.
-
-### G. Level Adaptation
-
-The system adjusts content and simplification based on the user's estimated English level using the **CEFR scale**:
-
-* A1 (Beginner)
-* A2 (Elementary)
-* B1 (Intermediate)
-* B2 (Upper Intermediate)
-* C1 (Advanced)
-* C2 (Proficient)
-
-### H. Marketplace
-
-A curated content space where users can:
-
-* discover texts by topic and level,
-* open selected readings,
-* continue previously started content,
-* save items for later,
-* receive AI-driven personalized book recommendations based on reading history, behavior, and ratings.
-
-### I. Progress Tracking
-
-The platform tracks:
-
-* reading sessions,
-* words learned,
-* reviewed vocabulary,
-* comprehension progress,
-* level improvement over time,
-* reading streaks and hours,
-* unlockable achievement badges (e.g., Mastery Seal, Knowledge Seeker).
-
-### J. Kids Mode (Future Scope)
-
-A simplified mode for younger users with:
-
-* easier text,
-* more visual structure,
-* safer and shorter reading content,
-* more guided interaction,
-* age-group categorization:
-  * Little Readers (3–5 years),
-  * Growing Readers (6–8 years),
-  * Big Readers (9–11 years).
-
-**Note:** Deferred to post-MVP. Requires separate UX, content curation, and child safety compliance.
-
-### K. Post-Reading Comprehension Quizzes
-
-After finishing a book or reading session:
-
-* AI-generated multiple-choice and true/false questions based on the content,
-* immediate score feedback,
-* promotes active learning and ensures comprehension.
-
-## 10) AI Capabilities
-
-Book Nest uses AI in three main areas:
-
-### Automatic Content Level Classification
-
-* Analyzes uploaded or marketplace content and assigns a CEFR level (A1–C2).
-* Ensures users are matched with appropriate difficulty.
-
-### Comprehension Quiz Generation
-
-* Creates multiple-choice and true/false questions from recently read content.
-* Validates understanding after each reading session.
-
-### Interactive Reading Assistance
-
-During reading, AI also:
-
-* simplifies difficult sentences to the user's level,
-* identifies likely hard vocabulary for saving,
-* supports level-aware reading guidance.
-
-### AI should not:
-
-* replace the whole learning flow,
-* generate unnecessary features,
-* distract from reading.
-
-### AI Cost Awareness
-
-Each AI call (simplification, explanation, quiz) incurs API costs. The system must:
-
-* cache word explanations for common words (never hit API twice for the same word),
-* pre-compute simplifications for starter library content at multiple CEFR levels,
-* rate-limit free-tier usage,
-* use smaller/cheaper models for simple tasks (word definitions) and stronger models for complex tasks (sentence simplification).
-
-### Model Options
-
-For development and MVP, the team can leverage free or low-cost model options:
-
-* **GPT-OSS 120B via Azure Student Plan** — Free access through Microsoft Azure's student credits. Provides a capable open-weight model suitable for simplification, explanation, and quiz generation.
-* **Other free API-based models** — OpenRouter free tier, Groq (Llama 3, Mixtral), Google AI Studio (Gemini free tier), or Hugging Face Inference API. These provide zero-cost access during development and early testing.
-* **Fallback strategy** — If free tiers hit rate limits, switch between providers. The system should abstract the model layer so swapping providers requires only a config change, not code changes.
-
-**Note:** Free tiers are sufficient for development, testing, and early MVP launches. At scale (1,000+ active users), paid API or self-hosted models become necessary.
-
-## 11) Content Rules
-
-Content must be:
-
-* suitable for English learners,
-* short and readable enough for the target level,
-* organized by difficulty and topic,
-* clear in quality and source.
-
-### Licensing (MVP)
-
-* Starter library uses **public domain texts only** (e.g., Project Gutenberg, OpenStax).
-* Marketplace with licensed content requires a **separate licensing strategy** defined before implementation.
-* User-uploaded content must include a copyright acknowledgment step.
-
-## 13) Competitive Advantage
-
-Compared to existing language learning reading platforms:
-
-| Feature | Book Nest | LingQ | Readlang | Beelinguapp |
-|---|---|---|---|---|
-| Click-to-translate words | Yes | Yes | Yes | Partial |
-| Vocabulary tracking | Yes | Yes | Yes | No |
-| AI sentence simplification | Yes | No | No | No |
-| CEFR level adaptation | Yes | Partial | No | No |
-| Auto vocabulary saving | Yes | Manual | Yes | No |
-| Post-reading quizzes | Yes | No | No | No |
-| Free tier | Yes | Limited | Yes | Limited |
-
-**Real differentiator:** Book Nest is the only platform built specifically for All learning English, with AI-powered sentence simplification and contextual word explanations. Competitors are generic — they do not account for English learner-specific challenges (false friends, grammar transfer, common mistakes).
-
-**Moat strategy:** Build a simplification quality feedback loop (user 👍/👎 ratings) to create a proprietary dataset that improves simplification quality over time for English learners.
-
-## 13.5) Monetization
-
-### Business Model: Freemium
-
-**Free tier:**
-* Unlimited text upload and reading
-* 10 sentence simplifications per day
-* 5 word explanations per day
-* 3 post-reading quizzes per day
-* Basic vocabulary saving
-
-**Premium tier ($2–3/month MENA, $5–7/month international):**
-* Unlimited AI features (simplifications, explanations, quizzes)
-* Advanced spaced repetition review system
-* Detailed progress analytics
-* Priority access to new features
-
-### B2B (Phase 2 — post product-market fit)
-* Bulk licenses for language centers and schools
-* Teacher dashboards with student progress tracking
-* Custom content curation for institutions
-
-### Cost Control
-* AI costs are the primary variable expense.
-* Aggressive caching, pre-computation, and model tiering are mandatory, not optional.
-
-## 13.6) AI Cost Management
-
-### Caching Strategy
-* **Word explanations (frontend):** TanStack AI handles streaming responses. Common words can be pre-cached in the frontend to avoid repeated API calls.
-* **Sentence simplifications (Python service):** Cache per CEFR level on the backend. If User A (B1) simplifies a sentence, User B (B1) gets the cached version.
-* **Quiz answers (Python service):** Cache quiz questions for identical content to avoid regeneration.
-
-### Rate Limiting
-* Free tier: hard daily limits on AI calls (10 simplifications, 5 explanations, 3 quizzes).
-* Premium tier: soft limits with abuse detection.
-* Per-user daily cap to prevent runaway costs.
-* **Frontend API keys must be protected** — use environment variables and provider-level rate limiting, not client-side secrets.
-
-### Model Tiering
-* **Tier 1 (cheap):** Word explanations, CEFR classification — use smaller models (GPT-4o-mini, Haiku).
-* **Tier 2 (moderate):** Sentence simplification, quiz generation — use mid-tier models.
-* **Tier 3 (expensive, rare):** Edge cases only — escalate to stronger models when user flags a poor simplification.
-
-### Pre-computation
-* Starter library content: pre-simplify all sentences at all 6 CEFR levels at ingest time. Zero runtime cost for curated content.
-
-## 13.6) Technical Architecture
-
-### Three-Tier Architecture
-
-The system is split into three layers based on responsibility:
-
-* **Frontend (TanStack Start)** — React-based full-stack application. Handles UI, routing, data fetching (TanStack Query), and **direct AI streaming calls** via TanStack AI for lightweight text features (word explanations, real-time text display).
-* **Node.js Service (Core Backend)** — Handles authentication, user management, reading sessions, vocabulary storage, progress tracking, quiz scoring, and all CRUD operations. Built with Hono on Node.js. Hono provides ergonomic, type-safe routing with Hono RPC (client) for end-to-end type safety, plus native TypeScript execution via `tsx`.
-* **Python Service (AI/ML Backend)** — Handles complex AI tasks: sentence simplification, CEFR classification, and quiz generation. Built with FastAPI. Exposes REST endpoints that the Node.js service calls. Managed with `uv` for fast dependency resolution and environment management.
-
-### AI Call Routing
-
-Not all AI calls go through the same path:
-
-| Feature | Where It Runs | How |
-|---|---|---|
-| **Word explanation** | Frontend (TanStack AI) | Direct LLM API call with streaming response |
-| **Sentence simplification** | Python service | Node.js → FastAPI → LLM → structured JSON response |
-| **CEFR classification** | Python service | Node.js → FastAPI → LLM (on content upload) |
-| **Quiz generation** | Python service | Node.js → FastAPI → LLM (after reading session) |
-
-**Why word explanations run in the frontend:** TanStack AI provides built-in streaming hooks (`useChat`, `useCompletion`) that render LLM responses token-by-token in real time. For word explanations, this gives instant, smooth UX without an extra backend hop. The frontend calls the LLM provider directly using TanStack AI's adapter system.
-
-### Communication Flow
-
-* **Frontend → LLM Provider:** TanStack AI calls LLM APIs directly for streaming text features (word explanations)
-* **Frontend → Node.js:** Standard REST API calls for data operations (auth, vocabulary, progress)
-* **Node.js → Python:** Internal HTTP requests for complex AI tasks (simplification, classification, quizzes)
-* **Node.js → Supabase:** Direct database operations via Supabase client or `pg` driver
-
-### Type Safety
-
-* **Eden Treaty** — ElysiaJS provides Eden treaty for end-to-end type safety between frontend and backend
-* Frontend can import the backend's API types directly, ensuring type-safe API calls without manual type definitions
-* Changes to backend routes automatically propagate type updates to the frontend
-
-### Database
-
-* **Supabase (PostgreSQL)** — Single database for all application data
-* Managed by the Node.js service using `pg` driver or Supabase client
-* Tables: users, reading_sessions, vocabulary, reviews, quizzes, content, progress
-* Supabase provides auth, REST API, and real-time capabilities out of the box
-
-### Frontend Stack
-
-* **Framework:** TanStack Start (React + Vite + SSR)
-* **Routing:** TanStack Router (type-safe, file-based)
-* **Data Fetching:** TanStack Query (caching, background refetch)
-* **AI Integration:** TanStack AI (streaming LLM responses, provider adapters, isomorphic tool definitions)
-* **Forms:** TanStack Form
-* **Styling:** (Team's choice — Tailwind CSS recommended)
-
-**Framework-first principle:** The frontend should maximize use of TanStack's built-in capabilities before reaching for external libraries. TanStack Start already provides SSR, routing, data fetching, AI streaming, and form management as a cohesive ecosystem. External dependencies should only be added when TanStack does not provide an equivalent solution. This reduces bundle size, avoids version conflicts, and keeps the codebase consistent with a single design philosophy.
-
-### Backend Stack (Node.js)
-
-* **Runtime:** Node.js — mature ecosystem, extensive package registry, widespread industry adoption
-* **Framework:** Hono — lightweight, fast, type-safe routing with Hono RPC client for end-to-end type safety
-* **Package Manager:** npm (or pnpm/yarn)
-* **TypeScript execution:** `tsx` — zero-config TypeScript runner for Node.js
-* **Key advantages:** Largest ecosystem, no runtime lock-in, Hono RPC provides automatic type inference from backend routes to frontend
-
-### Python Stack (uv)
-
-* **Runtime:** Python 3.12+
-* **Framework:** FastAPI
-* **Package/Environment Manager:** `uv` — ultra-fast dependency resolution and environment management (replaces pip/venv/poetry)
-* **Key advantages:** 10-100x faster than pip, single binary, lockfile support, workspace support
-
-### AI Layer
-
-* **Model Options:** GPT-OSS 120B via Azure Student Plan, or other free API-based models (Groq, Gemini free tier, OpenRouter free tier)
-* TanStack AI provides adapter-based provider abstraction — swap models via config without code changes
-* Fallback between providers if free tier rate limits are hit
-* Streaming responses for word explanations via TanStack AI hooks
-
-### Scope Note
-
-This is a graduation project — it will not go to production. Architecture decisions prioritize developer experience and learning over production-scale concerns. Caching, task queues, and horizontal scaling are excluded unless proven necessary during development.
-
-### Project Structure
-
-* **Monorepo** — Single repository with three packages:
-  * `frontend/` — TanStack Start application
-  * `backend/` — Node.js service (TypeScript with Hono)
-  * `ai-service/` — Python FastAPI service
-* Shared configuration at root level (CI, linting, environment templates)
+## 3. UI-Driven Feature Map (From Final Design Mockups)
 
 ### Authentication Flow
+- Login/Signup screens with Supabase Auth integration
+- Password reset and email confirmation flows
+- Guest access option for limited functionality
 
-* **Supabase Auth** manages user authentication end-to-end
-* Frontend authenticates users via Supabase SDK and receives a JWT
-* JWT is passed to Node.js in the `Authorization` header for all API requests
-* Node.js validates the JWT via Supabase before processing any request
-* Python AI service receives no auth tokens — it only receives user context (user ID, CEFR level) from Node.js when called internally
-* No custom auth logic needed in any service
+### Library (Marketplace)
+- Category-based browsing (Fiction, History, Kids, etc.) as shown in Categories.png and Category 1.png
+- Difficulty badges indicating CEFR level
+- Book cards with cover images, titles, authors, and ratings
+- Search and filter functionality by category, difficulty, and length
+- Guest browsing vs authenticated user experience
 
-### Text Parsing
+### Reader UI
+- Interactive Text: Sentence/Word tapping for AI assistance
+- Pagination: Progress tracking (e.g., "Page 1 of 48", "6% Done")
+- Note Sidebar: Sidebar for users to save thoughts per book (as shown in Notes.png)
+- Light/Dark Theme Toggle: As demonstrated in Book (Light Theme).png and Book (Dark Theme).png
+- Chapter Navigation: Access to table of contents and jump to specific chapters (Chapters.png)
+- Text Selection: Highlighting and annotation capabilities
+- Font Size Adjustment: User-controlled text scaling
 
-* **Frontend-based parsing** — Raw text is split into interactive sentence/word tokens on the client side
-* Uses a JavaScript NLP library (e.g., `compromise` or `sbd`) for sentence boundary detection
-* Handles edge cases: abbreviations, quotes, hyphenation
-* No backend hop needed for rendering — text becomes interactive immediately after upload
+### Assessment & Quizzes
+- Post-reading comprehension quizzes with timers and scoring
+- Multiple choice and true/false question formats
+- Immediate feedback with explanations
+- Quiz results tracking over time
+- Adaptive difficulty based on user performance
 
-### Type Sharing
+### Achievements
+- Badge system (e.g., "Dedicated Student", "High Achiever") as shown in Achievements.png
+- Progress tracking toward achievement completion
+- Visual display of earned badges in user profile
+- Motivational milestone celebrations
 
-* **Node.js backend is the source of truth** — All shared types (User, ReadingSession, Vocabulary, etc.) are defined in the Node.js service
-* **Frontend imports directly** — Since both are TypeScript in the same monorepo, the frontend imports types from the backend package with no build step needed
-* **Python gets Pydantic models only for cross-service types** — Types that cross the Node.js ↔ Python boundary (request/response shapes for simplification, classification, quiz generation) are auto-generated into Python Pydantic models using `datamodel-code-generator`
-* Python does **not** need types for auth, progress tracking, or frontend-specific shapes — only what it directly receives or returns
-* Ensures API contracts between Node.js ↔ Python stay in sync
-* Changes to cross-service types trigger regeneration of Python models
+### Profile & Settings
+- User profile displaying reading statistics and CEFR level
+- Reading history with books completed and time spent
+- Vocabulary management interface with review scheduling
+- Achievement showcase with earned badges
+- Settings for notifications, privacy, and display preferences
+- Language interface options
+- Data export and account management
 
-### AI Error Handling
+### Kids Mode
+- Specialized interface for younger learners as shown in Kids Page.png
+- Age-appropriate content categorization (Little Readers 3-5, Growing Readers 6-8, Big Readers 9-11)
+- Simplified navigation and larger touch targets
+- Enhanced visual elements and reduced text density
+- Guided reading pathways with parental controls
+- Reward systems tailored to child development stages
 
-* **Graceful fallback strategy** for all AI features:
-  * **Word explanation:** If AI call fails or times out, show a basic dictionary definition or Arabic translation from a fallback source. Retry once automatically.
-  * **Sentence simplification:** If AI fails, show the original sentence with a message: "Simplification unavailable — try again." Retry once.
-  * **Quiz generation:** If AI fails, skip the quiz for this session and allow the user to retry later.
-* All AI errors are logged for debugging
-* User-facing messages are friendly and non-technical
+### Vocabulary Management
+- Personal word bank with context sentences and definitions
+- Spaced repetition review system
+- Word mastery tracking and proficiency levels
+- Ability to edit, tag, and organize vocabulary
+- Export/import functionality for word lists
 
-## 14) Functional Requirements
+### Reading Notes & Annotation
+- In-text highlighting and note creation
+- Side panel for viewing and managing notes per book
+- Note search and filtering capabilities
+- Export options for sharing or archiving
+- Linking notes to specific vocabulary or concepts
 
-The system must support (MVP):
+## 4. Database Schema (Supabase/Postgres)
 
-* user registration and login,
-* level selection or assessment,
-* reading inside the app with interactive sentence/word tokens,
-* sentence simplification on demand (level-aware),
-* automatic vocabulary saving,
-* vocabulary review flow (spaced repetition),
-* post-reading comprehension quizzes,
-* basic progress tracking (sessions, words learned, streaks),
-* content filtering by CEFR level,
-* simplification quality feedback (👍/👎).
+### Core Tables
 
-## 15) Non-Functional Requirements
+**profiles:** Extends Supabase auth.users
+- id (uuid) - Primary key, references auth.users
+- full_name (text)
+- cefr_level (text) - Constrained to: 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'
+- avatar_url (text)
+- created_at (timestamp with time zone)
+- updated_at (timestamp with time zone)
 
-* **Performance:** Fast loading and responsive interactions.
-* **Availability:** Reliable uptime for reading sessions.
-* **Security:** Secure authentication and data protection.
-* **Reliability:** Consistent behavior across sessions.
-* **Scalability:** Ability to handle growing users and content.
-* **Usability:** Clean, intuitive interface.
+**books:** Catalog of available reading material
+- id (uuid) - Primary key
+- title (text)
+- author (text)
+- category (text) - e.g., Fiction, History, Science, Kids
+- difficulty (text) - CEFR level: 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'
+- content_url (text) - Reference to storage or external content
+- total_pages (integer)
+- created_at (timestamp with time zone)
 
-## 16) User Experience Requirements
+**user_progress:** Tracking reading progress
+- id (uuid) - Primary key
+- user_id (uuid) - References auth.users
+- book_id (uuid) - References books
+- current_page (integer)
+- is_completed (boolean)
+- updated_at (timestamp with time zone)
+- Unique constraint on (user_id, book_id)
 
-The reading experience must be:
+**vocabulary:** User's personal word bank
+- id (uuid) - Primary key
+- user_id (uuid) - References auth.users
+- word (text)
+- context_sentence (text)
+- definition (text)
+- last_reviewed (timestamp with time zone)
+- Unique constraint on (user_id, word) to prevent duplicates
 
-* fast,
-* clean,
-* distraction-free,
-* interactive without breaking reading flow,
-* readable on mobile and desktop.
+**notes:** User-created annotations
+- id (uuid) - Primary key
+- user_id (uuid) - References auth.users
+- book_id (uuid) - References books
+- page_number (integer)
+- content (text)
+- created_at (timestamp with time zone)
 
-## 17) Success Metrics
+**quiz_results:** Assessment outcomes
+- id (uuid) - Primary key
+- user_id (uuid) - References auth.users
+- book_id (uuid) - References books
+- answers (jsonb) - User's submitted answers
+- score (decimal) - Percentage score (0-100)
+- completed_at (timestamp with time zone)
 
-The product is successful if:
+**achievements:** System-defined accomplishments
+- id (uuid) - Primary key
+- name (text) - Unique achievement identifier
+- description (text)
+- criteria_json (jsonb) - Flexible earning conditions
+- created_at (timestamp with time zone)
 
-* **Engagement:** 60% of users complete at least 3 reading sessions per week.
-* **Vocabulary:** Average user saves 15+ words per session and reviews 50%+ of saved words within 7 days.
-* **Comprehension:** 70%+ pass rate on post-reading quizzes (indicates content is challenging but achievable).
-* **Retention:** 40% of users return within 7 days of their first session.
-* **Quality:** 80%+ positive rating (👍) on sentence simplifications.
-* **Improvement:** Users who read 20+ sessions show measurable CEFR level improvement (validated by reassessment).
+**user_achievements:** Earned achievements
+- id (uuid) - Primary key
+- user_id (uuid) - References auth.users
+- achievement_id (uuid) - References achievements
+- earned_at (timestamp with time zone)
+- Unique constraint on (user_id, achievement_id)
 
-## 18) Key Differentiator
+### Additional Features
+- Row Level Security (RLS) policies for data protection
+- Real-time subscriptions enabled for collaborative features
+- Indexes on frequently queried columns for performance
+- Triggers for automatic updated_at timestamp updates
+- Full-text search capabilities for vocabulary and notes
 
-The main differentiator is not "books."
-It is:
-**read any content, tap anything difficult, and instantly get a simpler, level-aware learning experience without leaving the page.**
+## 5. API Endpoints
 
-## 19) Main Risks & Mitigations
+### Authentication & Profile
+- `GET /api/profile` - Retrieve authenticated user's profile and statistics
+- `PATCH /api/profile/level` - Update user's CEFR level after assessment
+- `GET /api/auth/status` - Check authentication status
+- `POST /api/auth/refresh` - Refresh authentication token
 
-| Risk | Impact | Mitigation |
-|---|---|---|
-| Simplification quality is poor | Critical | User feedback loop (👍/👎), prompt engineering iterations, fallback to Arabic translation if simplification fails |
-| AI costs exceed revenue | High | Aggressive caching, rate limits, pre-computation, model tiering, hard daily caps |
-| Vocabulary saving becomes noise | Medium | Smart word selection (only save words above user's level), let users unsave easily |
-| No backend engineer on team | Critical | Reassign one AI engineer to full-stack, or recruit a backend developer immediately |
-| Content licensing blocks marketplace | High | MVP uses user uploads + public domain only. Licensing strategy defined before marketplace launch |
-| Scope creep delays graduation deadline | Critical | Strict MVP scope (5 features). Everything else is explicitly marked Future Scope |
-| Product becomes a generic reader with badges | Medium | Keep focus on adaptive reading. Defer gamification. Measure simplification quality as north-star KPI |
+### Books & Library
+- `GET /api/books` - Get paginated list of books with filtering options
+  - Query parameters: category, difficulty, search, limit, offset
+- `GET /api/books/:id` - Get detailed information for a specific book
+- `GET /api/categories` - Get list of available content categories
+- `GET /api/trending` - Get currently popular books
 
-## 20) MVP Scope
+### Reading Progress
+- `POST /api/progress/update` - Update user's reading progress for a book
+  - Body: { bookId, currentPage }
+- `GET /api/progress/:bookId` - Get user's progress for a specific book
+- `GET /api/progress` - Get user's progress across all books
+- `POST /api/progress/complete/:bookId` - Mark a book as completed
 
-The first version includes **only** these features:
+### Notes & Annotations
+- `GET /api/notes/:bookId` - Get all user notes for a specific book
+- `POST /api/notes` - Create a new note
+  - Body: { bookId, pageNumber, content }
+- `PUT /api/notes/:id` - Update an existing note
+  - Body: { content }
+- `DELETE /api/notes/:id` - Delete a note
 
-1. **Account creation + level assessment** — sign up, select or test into CEFR level.
-2. **Sentence simplification** — tap a sentence, get a level-aware simpler version. Original text preserved.
-3. **Word explanation + auto vocabulary saving** — tap a word, get definition. Important words saved automatically.
-4. **Basic progress tracking** — reading sessions, words learned, streaks.
+### Vocabulary Management
+- `POST /api/vocabulary/save` - Save a new word to user's vocabulary
+  - Body: { word, contextSentence, definition }
+- `GET /api/vocabulary` - Get user's vocabulary list with pagination
+  - Query parameters: limit, offset, search, sortBy
+- `PUT /api/vocabulary/:id/review` - Update word review status
+  - Body: { masteryLevel } (optional)
+- `DELETE /api/vocabulary/:id` - Remove a word from vocabulary
+- `GET /api/vocabulary/stats` - Get vocabulary learning statistics
 
-**Supporting (required for MVP):**
-* Vocabulary review flow (spaced repetition)
-* Post-reading comprehension quizzes
-* Simplification quality feedback (👍/👎)
-* Starter library (public domain texts, pre-simplified)
-* Marketplace with licensed content (requires licensing strategy)
-* AI-driven book recommendations
-* Filter-based book discovery (by level, topic, length)
-* Advanced spaced repetition with FSRS algorithm
+### Reading Session & AI Assistance
+- `POST /api/reader/simplify` - Get AI-powered sentence simplification
+  - Body: { sentence, cefrLevel }
+  - Proxy to Python AI service
+- `POST /api/reader/explain` - Get word/phrase explanation
+  - Body: { text, cefrLevel }
+  - Proxy to Python AI service
+- `POST /api/reader/quiz/:bookId` - Generate comprehension quiz for a book
+  - Query parameters: numberOfQuestions, difficulty
+  - Proxy to Python AI service
+- `POST /api/reader/quiz/submit` - Submit quiz answers for scoring
+  - Body: { bookId, answers }
+  - Proxy to Python AI service for validation if needed
 
-## 22) Final Product Definition
+### Achievements
+- `GET /api/achievements` - Get list of available achievements
+- `GET /api/user/achievements` - Get current user's earned achievements
+- `POST /api/achievements/check/:bookId` - Check for new achievements after reading
+- `GET /api/achievements/:id` - Get details for a specific achievement
 
-Book Nest is an adaptive reading platform for All English learners that helps users understand real English content by simplifying difficult text, explaining vocabulary in context, and saving words automatically for later review — all inside a reactive reading experience. Powered by AI for sentence simplification, word explanation, CEFR classification, and comprehension assessment.
+### Admin & Moderation
+- `GET /admin/stats` - Platform usage statistics (admin only)
+- `POST /admin/books` - Add new book to catalog (admin only)
+- `PUT /admin/books/:id` - Update book information (admin only)
+- `DELETE /admin/books/:id` - Remove book from catalog (admin only)
+
+## 6. AI Service Integration
+
+### Architecture
+The backend serves as a gateway to the Python AI service for computationally intensive tasks:
+- Sentence simplification based on user's CEFR level
+- Contextual word explanations and definitions
+- Quiz question generation from reading content
+- Content difficulty classification and leveling
+
+### Endpoint Proxying
+All AI requests flow: Frontend → Node.js Backend → Python AI Service → Node.js Backend → Frontend
+
+This approach provides:
+- API key security (keys never exposed to frontend)
+- Rate limiting and abuse prevention
+- Caching opportunities for repeated requests
+- Fallback mechanisms if AI service is unavailable
+- Consistent error handling and response formatting
+
+### Supported AI Operations
+1. **Text Simplification**
+   - Input: Original sentence, target CEFR level
+   - Output: Simplified version maintaining core meaning
+   - Caching: Per sentence/CEFR level combination
+
+2. **Word Explanation**
+   - Input: Word or phrase, context sentence
+   - Output: Definition, usage example, pronunciation guide
+   - Caching: Per word (independent of context for common words)
+
+3. **Quiz Generation**
+   - Input: Book/content ID, target CEFR level, number of questions
+   - Output: Multiple choice and true/false questions with answers
+   - Caching: Per book/CEFR level/question count combination
+
+4. **Content Leveling**
+   - Input: Raw text content
+   - Output: CEFR level classification (A1-C2)
+   - Used during content ingestion and cataloging
+
+## 7. Security Considerations
+
+### Authentication
+- JWT-based authentication via Supabase
+- Token expiration and refresh mechanisms
+- HTTPS enforcement in production
+- Secure password handling (via Supabase)
+- Protection against brute force attacks
+
+### Data Protection
+- Row Level Security (RLS) policies in Supabase
+- Input validation and sanitization on all endpoints
+- Protection against SQL injection and XSS attacks
+- Secure handling of user-generated content
+- Regular security audits and dependency updates
+
+### Privacy
+- GDPR-compliant data handling
+- User data export and deletion capabilities
+- Minimal data collection principles
+- Clear privacy policy and terms of service
+- Age-appropriate safeguards for Kids Mode
+
+### AI Safety
+- Content filtering for inappropriate material
+- Rate limiting to prevent API abuse
+- Fallback responses when AI service is unavailable
+- Monitoring for biased or harmful outputs
+- Human review mechanisms for edge cases
+
+## 8. Performance & Scalability
+
+### Caching Strategy
+- Redis-based caching for frequently accessed data
+- CDN for static assets (book covers, UI assets)
+- Database query optimization and indexing
+- API response caching for non-user-specific data
+- Browser caching with appropriate headers
+
+### Database Optimization
+- Connection pooling for Supabase interactions
+- Indexes on foreign keys and query-filtered columns
+- Read replicas for high-traffic queries (if needed)
+- Archiving strategies for historical data
+- Regular vacuum and analyze operations
+
+### Horizontal Scaling
+- Stateless backend services for easy replication
+- Load balancing across multiple instances
+- Database connection sharing and pooling
+- Microservice separation for AI-heavy operations
+- Containerization with Docker for consistent deployment
+
+### Monitoring & Analytics
+- Performance monitoring and alerting
+- Error tracking and exception reporting
+- Usage analytics for product improvement
+- Health check endpoints for orchestration
+- Log aggregation and analysis
+
+## 9. Development & Deployment
+
+### Environment Setup
+- Node.js >= 16.x
+- npm or yarn package manager
+- Supabase account and project
+- Python 3.9+ for AI service (separate repository)
+- Git for version control
+
+### Local Development
+1. Clone repository
+2. Configure environment variables (.env file)
+3. Install dependencies: `npm install`
+4. Start development server: `npm run dev`
+5. Ensure Python AI service is running on configured port
+6. Access at http://localhost:5000 (or configured port)
+
+### Environment Variables
+```
+# Server Configuration
+PORT=5000
+FRONTEND_URL=http://localhost:5173
+NODE_ENV=development
+
+# Supabase Configuration
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key (for admin operations)
+
+# Python AI Service
+PYTHON_SERVICE_URL=http://localhost:8000
+AI_SERVICE_TIMEOUT=10000
+
+# Security
+JWT_SECRET=your_jwt_secret
+ENCRYPTION_KEY=your_encryption_key
+
+# Optional Services
+REDIS_URL=redis://localhost:6379
+SENDGRID_API_KEY=your_sendgrid_key (for email)
+```
+
+### Production Deployment
+1. Set environment variables for production
+2. Build optimized assets: `npm run build`
+3. Start production server: `npm start`
+4. Use process manager (PM2, systemd) or container orchestration
+5. Configure reverse proxy (NGINX) for SSL and load balancing
+6. Set up monitoring, logging, and backup solutions
+7. Configure custom domain and SSL certificates
+
+### CI/CD Pipeline
+- Automated testing on pull requests
+- Security scanning for dependencies
+- Build validation in staging environment
+- Blue-green deployment strategy
+- Rollback mechanisms for failed deployments
+- Performance regression testing
+
+## 10. Product Roadmap
+
+### Phase 1: MVP (Current Implementation)
+- Core reading experience with interactive text
+- Basic user authentication and profiles
+- Sentence simplification and word explanations
+- Vocabulary saving and basic review
+- Reading progress tracking
+- Simple quiz generation
+- Light/dark theme support
+- Basic marketplace browsing
+
+### Phase 2: Enhanced Features
+- Advanced vocabulary review with spaced repetition
+- Comprehensive achievement system
+- Social features (reading clubs, sharing notes)
+- Advanced analytics and progress visualization
+- Offline reading capabilities
+- Customizable reading goals and reminders
+- Enhanced note-taking with tagging and organization
+
+### Phase 3: AI-Powered Personalization
+- Adaptive learning paths based on user behavior
+- Personalized book recommendations
+- AI-generated content summaries
+- Pronunciation practice with speech recognition
+- Writing practice with AI feedback
+- Learning style adaptation and content formatting
+
+### Phase 4: Expansion & Internationalization
+- Multiple language interfaces (Arabic, Spanish, etc.)
+- Expanded content library with licensing partnerships
+- Educational institution integrations
+- Teacher dashboards and classroom management
+- Curriculum alignment and lesson planning tools
+- Parent/guardian supervision features
+
+## 11. Success Metrics
+
+### Engagement
+- Daily Active Users (DAU) / Monthly Active Users (MAU) ratio
+- Average session duration
+- Reading completion rates
+- Vocabulary interaction frequency
+- Quiz participation rates
+
+### Learning Outcomes
+- Vocabulary retention rates (post-review)
+- Self-reported confidence improvement
+- Assessment score improvements over time
+- CEFR level progression velocity
+- Time to reach learning milestones
+
+### Retention
+- Day 1, Day 7, Day 30 retention rates
+- Churn rate and reactivation metrics
+- Subscription conversion and upgrade rates
+- Referral and organic growth metrics
+- Net Promoter Score (NPS)
+
+### System Performance
+- Page load times and interaction responsiveness
+- API error rates and downtime
+- AI service latency and success rates
+- Database query performance
+- Resource utilization efficiency
+
+## 12. Risks & Mitigations
+
+### Technical Risks
+- **AI Service Dependencies**: Mitigated by caching, fallback responses, and graceful degradation
+- **Scalability Challenges**: Addressed through horizontal scaling, caching, and performance monitoring
+- **Data Security**: Protected via encryption, regular audits, and compliance frameworks
+- **Technical Debt**: Managed through regular refactoring, code reviews, and maintenance sprints
+
+### Product Risks
+- **User Adoption**: Addressed through intuitive UX, onboarding flows, and value-driven features
+- **Content Limitations**: Mitigated by expanding library, user uploads, and partnership development
+- **Learning Efficacy**: Validated through educational research partnerships and outcome measurement
+- **Competition**: Differentiated through unique AI adaptation, superior UX, and specialized focus
+
+### Operational Risks
+- **Team Capacity**: Managed through clear prioritization, agile methodologies, and strategic hiring
+- **Budget Constraints**: Addressed through phased implementation and cost optimization
+- **Timeline Pressures**: Mitigated by MVP approach and iterative development cycles
+- **External Dependencies**: Reduced through abstraction layers, fallback options, and vendor diversification
+
+---
+*Document Version: 1.0*
+*Last Updated: April 22, 2026*
+*Prepared by: Book Nest Development Team*
