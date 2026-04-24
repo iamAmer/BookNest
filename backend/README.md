@@ -1,241 +1,269 @@
-# 🚀 BookNest Backend
+# ⚙️ BookNest Backend
 
-**Status:** ✅ 100% Complete  
-**API Endpoints:** 35+  
-**API Documentation:** 📚 Swagger UI Available  
-**Ready for:** Frontend Integration, Testing, Production
+The backend for BookNest is a RESTful API built with Node.js, Express, and TypeScript that provides all the core functionality for the adaptive reading platform. It handles user authentication, book management, quiz processing, progress tracking, and more, all backed by a PostgreSQL database.
 
----
+## 🚀 Getting Started
 
-## 📖 Documentation & Swagger UI
+### Prerequisites
+- Docker and Docker Compose (for PostgreSQL)
+- Node.js (v16+)
+- npm or yarn
 
-**[📚 Read Full Documentation →](docs/README.md)**
+### Quick Start
 
-**[🔍 Interactive Swagger UI →](http://localhost:5000/api-docs)** (Start backend first!)
-
-All backend documentation is in the `docs/` folder, including:
-
-- [SWAGGER_GUIDE.md](docs/SWAGGER_GUIDE.md) - How to use interactive API docs
-- [BACKEND_SETUP.md](docs/BACKEND_SETUP.md) - Setup instructions
-- [IMPLEMENTATION_COMPLETE.md](docs/IMPLEMENTATION_COMPLETE.md) - Full API reference
-
----
-
-## ⚡ Quick Start (2 minutes)
-
+1. Start the database:
 ```bash
-# 1. Install dependencies
-npm install
-
-# 2. Start PostgreSQL
 docker-compose up -d
-
-# 3. Wait for initialization
-sleep 10
-
-# 4. Build and run
-npm run build
-npm run dev
-
-# 5. Test it
-curl http://localhost:5000/health
 ```
 
----
+2. Install dependencies:
+```bash
+npm install
+```
 
-## 📁 Folder Structure
+3. Build the TypeScript code:
+```bash
+npm run build
+```
+
+4. Start the development server:
+```bash
+npm run dev
+```
+
+The API will be available at `http://localhost:5000`
+
+### Environment Setup
+
+Copy the example environment file and configure it:
+```bash
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+## 🔧 Configuration
+
+The backend uses environment variables for configuration. Copy `.env.example` to `.env` and adjust the values:
+
+### Required Variables
+- `PORT` - Server port (default: 5000)
+- `PYTHON_SERVICE_URL` - URL of the AI service (default: http://localhost:8000)
+- `JWT_SECRET` - Secret key for JWT token signing
+- Database connection:
+  - `DB_HOST` - Database host (default: localhost)
+  - `DB_PORT` - Database port (default: 5432)
+  - `DB_USER` - Database username (default: postgres)
+  - `DB_PASSWORD` - Database password (default: postgres)
+  - `DB_NAME` - Database name (default: booknest)
+
+### Optional Variables
+- `NODE_ENV` - Environment (development/production)
+- `LOG_LEVEL` - Logging level
+
+## 📁 Project Structure
 
 ```
 backend/
-├── docs/                    # 📚 Full documentation
-│   ├── README.md           # Start here
-│   ├── BACKEND_SETUP.md    # Setup guide
-│   ├── IMPLEMENTATION_COMPLETE.md # API reference
-│   ├── DETAILED_IMPLEMENTATION_PROMPT.md # Developer guide
-│   ├── COMPLETION_REPORT.md # Final report
-│   └── BACKEND_COMPLETION_STATUS.md # Status
-├── src/
-│   ├── server.ts           # Main entry point
-│   ├── config/             # Database configuration
-│   ├── controllers/        # 9 controllers
-│   ├── routes/             # 9 route modules
-│   ├── middleware/         # Auth & validation
-│   └── utils/              # Utilities
-├── db/
-│   ├── schema.sql          # 11 database tables
-│   └── seed.sql            # Sample data
-├── build/                  # Compiled JavaScript (auto-generated)
-├── node_modules/           # Dependencies (auto-generated)
-├── .env                    # Configuration
-├── package.json
-├── tsconfig.json
-└── docker-compose.yml      # Docker setup
+├── src/                    # TypeScript source code
+│   ├── controllers/        # Request handlers
+│   │   ├── authController.ts       # Authentication endpoints
+│   │   ├── profileController.ts    # User profile management
+│   │   ├── bookController.ts       # Book catalog and search
+│   │   ├── progressController.ts   # Reading progress tracking
+│   │   ├── vocabularyController.ts # Word bank management
+│   │   ├── notesController.ts      # User notes and annotations
+│   │   ├── aiController.ts         # AI service integration
+│   │   └── achievementsController.ts # Achievement system
+│   ├── middleware/         # Custom Express middleware
+│   │   ├── auth.ts         # JWT verification
+│   │   ├── validation.ts   # Input validation (to be implemented)
+│   │   └── ...             # Other middleware
+│   ├── routes/             # API route definitions
+│   │   ├── authRoutes.ts           # Authentication routes
+│   │   ├── profileRoutes.ts        # Profile routes
+│   │   ├── bookRoutes.ts           # Book routes
+│   │   ├── progressRoutes.ts       # Progress routes
+│   │   ├── vocabularyRoutes.ts     # Vocabulary routes
+│   │   ├── notesRoutes.ts          # Notes routes
+│   │   ├── aiRoutes.ts             # AI service routes
+│   │   └── achievementsRoutes.ts   # Achievement routes
+│   ├── config/             # Configuration files
+│   │   └── database.ts     # PostgreSQL connection pool
+│   ├── utils/              # Utility functions
+│   │   └── auth.ts         # JWT and password helpers
+│   ├── server.ts         # Express application setup
+│   └── ...                 # Other source files
+├── db/                     # Database files
+│   ├── schema.sql          # Database schema definition
+│   └── seed.sql            # Initial sample data
+├── docs/                   # Documentation files
+├── build/                  # Compiled JavaScript output
+├── node_modules/           # Dependencies
+├── package.json            # Project metadata and scripts
+├── tsconfig.json           # TypeScript configuration
+├── .env.example            # Environment variables template
+├── docker-compose.yml      # Docker services definition
+└── README.md               # This file
 ```
 
----
+## 🛠️ Available Scripts
 
-## ✨ Features
+- `npm run dev` - Start development server with nodemon
+- `npm run build` - Compile TypeScript to JavaScript
+- `npm start` - Start production server (built code)
+- `npm test` - Run test suite (to be implemented)
 
-✅ **Authentication System**
+## 🔌 API Endpoints
 
-- JWT-based auth (24h access, 7d refresh)
-- Bcryptjs 
-g (10-round salt)
-- Admin role support
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login user
+- `POST /api/auth/logout` - Logout user
+- `POST /api/auth/refresh` - Refresh access token
+- `GET /api/auth/status` - Check authentication status
+- `POST /api/auth/password-reset` - Request password reset
 
-✅ **Core Features**
+### User Profile
+- `GET /api/profile` - Get current user profile
+- `PUT /api/profile` - Update user profile
+- `GET /api/profile/:id` - Get user profile by ID
 
-- Book search & filtering
-- Reading progress tracking with time
-- Notes & annotations
-- Vocabulary management with mastery levels
-- Quiz system with achievement checking
-- Reading streaks with badges
-- Admin dashboard
+### Books & Library
+- `GET /api/books` - Get books with filtering and pagination
+- `GET /api/books/:id` - Get book by ID
+- `GET /api/books/categories` - Get all book categories
+- `GET /api/books/trending` - Get trending books
 
-✅ **Security**
+### Progress Tracking
+- `GET /api/progress` - Get user's reading progress
+- `POST /api/progress` - Update reading progress
+- `GET /api/progress/:bookId` - Get progress for specific book
 
-- SQL injection prevention
-- Input validation on all endpoints
-- User ownership verification
-- Admin role-based access control
+### Quiz System
+- `GET /api/reader/quiz/:bookId` - Get quiz questions for a book
+- `POST /api/reader/quiz/submit` - Submit quiz answers
+- `POST /api/reader/simplify` - Simplify sentence for user's level
 
----
+### Vocabulary Management
+- `GET /api/vocabulary` - Get user's vocabulary words
+- `POST /api/vocabulary` - Add new vocabulary word
+- `PUT /api/vocabulary/:id` - Update vocabulary word
+- `DELETE /api/vocabulary/:id` - Remove vocabulary word
 
-## 🔧 Available Commands
+### Notes & Annotations
+- `GET /api/notes` - Get user's notes
+- `POST /api/notes` - Create new note
+- `PUT /api/notes/:id` - Update note
+- `DELETE /api/notes/:id` - Delete note
 
+### Achievements
+- `GET /api/achievements` - Get all available achievements
+- `GET /api/user/achievements` - Get user's earned achievements
+
+### Admin Endpoints (Planned)
+- `GET /admin/stats` - Platform statistics
+- `POST /admin/books` - Add new book
+- `PUT /admin/books/:id` - Update book
+- `DELETE /admin/books/:id` - Delete book
+
+## 🗄️ Database Schema
+
+The backend uses PostgreSQL with the following core tables:
+
+1. **users** - User accounts and authentication data
+2. **books** - Book catalog with metadata
+3. **categories** - Book classification categories
+4. **user_progress** - Reading progress tracking per user/book
+5. **vocabulary** - User's word bank with mastery levels
+6. **notes** - User's notes and annotations on books
+7. **achievements** - Definition of achievements and badges
+8. **user_achievements** - Junction table for user achievement tracking
+9. **quiz_results** - Storage of quiz attempts and scores
+10. **refresh_tokens** - JWT refresh token management
+11. **password_resets** - Password reset request tracking
+
+Refer to `db/schema.sql` for the complete schema definition.
+
+## 🧪 Testing
+
+Currently, the backend has a basic test setup with Jest. To run tests:
 ```bash
-# Development
-npm run dev          # Start with hot reload (nodemon)
-npm run build        # Build TypeScript → JavaScript
-npm start            # Run compiled server
-
-# Database
-docker-compose up   # Start PostgreSQL
-docker-compose down # Stop containers
+npm test
 ```
 
----
+## 📚 API Documentation
 
-## 📡 API Overview
+Once the server is running, visit:
+- Swagger UI: `http://localhost:5000/api-docs`
+- Health Check: `http://localhost:5000/health`
 
-**35+ Endpoints** organized in 9 routes:
+The Swagger UI provides interactive documentation for all available endpoints with the ability to test them directly.
 
-| Route               | Endpoints | Purpose                          |
-| ------------------- | --------- | -------------------------------- |
-| `/api/auth`         | 6         | User authentication              |
-| `/api/profile`      | 3         | User profile & stats             |
-| `/api/books`        | 4         | Book search & metadata           |
-| `/api/progress`     | 2         | Reading progress                 |
-| `/api/notes`        | 4         | Note management                  |
-| `/api/vocabulary`   | 5         | Word learning                    |
-| `/api/reader`       | 3         | AI text simplification & quizzes |
-| `/api/achievements` | 1         | Achievement system               |
-| `/api/admin`        | 7         | Admin management                 |
+## 🔍 Troubleshooting
 
----
+### Database Connection Issues
+- Ensure Docker is running: `docker ps`
+- Check PostgreSQL status: `docker logs booknest-db`
+- Verify .env database credentials
+- Try manual connection: `psql -h localhost -U postgres -d booknest`
 
-## 🔑 Environment Variables
+### Backend Startup Issues
+- Check if port 5000 is available: `lsof -i :5000`
+- Verify TypeScript compilation: `npx tsc --noEmit`
+- Check for missing dependencies: `npm install`
+- Look at error logs in terminal
 
-Create `.env` file (copy from `.env.example`):
+### AI Service Integration Issues
+- Verify AI service is running on configured port
+- Check PYTHON_SERVICE_URL in .env
+- Test AI service directly: `curl http://localhost:8000/health`
+- Check backend logs for timeout errors
 
-```env
+### Authentication Problems
+- Verify JWT_SECRET is set in .env
+- Check token expiration settings
+- Ensure cookies are being set properly (for refresh tokens)
+- Clear browser cookies and localStorage if having auth issues
+
+## 📝 Environment Variables Example
+
+```
+# Server Configuration
 PORT=5000
-NODE_ENV=development
+PYTHON_SERVICE_URL=http://localhost:8000
+JWT_SECRET=your_super_secret_jwt_key_change_in_production
+
+# Database Configuration
 DB_HOST=localhost
 DB_PORT=5432
-DB_USER=booknest
-DB_PASSWORD=booknest_password
+DB_USER=postgres
+DB_PASSWORD=postgres
 DB_NAME=booknest
-JWT_SECRET=your-secret-key
-FRONTEND_URL=http://localhost:5173
+
+# Environment
+NODE_ENV=development
+LOG_LEVEL=info
 ```
 
----
+## 🤝 Contributing
 
-| File                                                                             | Purpose            | Read Time |
-| -------------------------------------------------------------------------------- | ------------------ | --------- |
-| [docs/README.md](docs/README.md)                                                 | 📚 **START HERE**  | 5 min     |
-| [docs/BACKEND_SETUP.md](docs/BACKEND_SETUP.md)                                   | Setup & deployment | 15 min    |
-| [docs/IMPLEMENTATION_COMPLETE.md](docs/IMPLEMENTATION_COMPLETE.md)               | API reference      | 25 min    |
-| [docs/DETAILED_IMPLEMENTATION_PROMPT.md](docs/DETAILED_IMPLEMENTATION_PROMPT.md) | Development        | 25 min    |
-| [docs/COMPLETION_REPORT.md](docs/COMPLETION_REPORT.md)                           | Final report       | 10 min    |
-| [docs/BACKEND_COMPLETION_STATUS.md](docs/BACKEND_COMPLETION_STATUS.md)           | Status tracking    | 10 min    |
+1. Ensure your code follows the existing TypeScript and ESLint conventions
+2. Write unit tests for new functionality
+3. Update API documentation in Swagger comments
+4. Keep commits focused and descriptive
+5. Update changelog for significant changes
 
----
+## 📄 License
 
-## 📊 Database
+This project is part of the BookNest platform and is licensed under the MIT License.
 
-**11 Tables** with relationships and indexes:
+## 👥 Authors
 
-- `auth_users` - User credentials & admin flag
-- `profiles` - User profile & CEFR level
-- `books` - Book catalog (11,000+ sample books)
-- `categories` - Book categories
-- `user_progress` - Reading progress tracking
-- `notes` - User annotations
-- `vocabulary` - Personal word bank with mastery
-- `quiz_results` - Quiz responses & scores
-- `achievements` - Achievement definitions
-- `user_achievements` - Earned achievements
-- `refresh_tokens` - Token invalidation
+- Book Nest Development Team
 
----
+## 🙏 Acknowledgments
 
-## 🆘 Troubleshooting
-
-### PostgreSQL not connecting?
-
-```bash
-docker-compose up -d
-docker logs booknest-db
-```
-
-### Port 5000 already in use?
-
-```bash
-lsof -i :5000
-kill -9 <PID>
-```
-
-### Need to reset database?
-
-```bash
-docker-compose down -v
-docker-compose up -d
-npm run build
-npm run dev
-```
-
-**More help:** See `docs/BACKEND_SETUP.md` → Common Issues
-
----
-
-## 🎯 Next Steps
-
-1. **Read Documentation:** [docs/README.md](docs/README.md)
-2. **Setup Backend:** [docs/BACKEND_SETUP.md](docs/BACKEND_SETUP.md)
-3. **Explore API:** [docs/IMPLEMENTATION_COMPLETE.md](docs/IMPLEMENTATION_COMPLETE.md)
-4. **Develop Features:** [docs/DETAILED_IMPLEMENTATION_PROMPT.md](docs/DETAILED_IMPLEMENTATION_PROMPT.md)
-
----
-
-**Status:** ✅ Production Ready  
-**Database:** PostgreSQL  
-**Last Updated:** April 23, 2026
-
-👉 **[📚 Read Full Documentation →](docs/README.md)**
-
-- Check that the cors middleware is properly configured
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Ensure all tests pass
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+- Express.js and TypeScript communities
+- PostgreSQL team for the excellent database
+- Docker team for containerization excellence
+- All open source contributors whose work makes this possible
