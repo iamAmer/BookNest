@@ -70,13 +70,12 @@ export const createBook = async (
       category,
       difficulty,
       total_pages,
-      isbn,
-      cover_url,
+      cover_image_url,
     } = req.body
 
-    if (!title || !author || !description || !difficulty || !total_pages) {
+    if (!title || !author || !description || !difficulty) {
       res.status(400).json({
-        error: 'Title, author, description, difficulty, and total_pages are required',
+        error: 'Title, author, description, and difficulty are required',
       })
       return
     }
@@ -87,7 +86,8 @@ export const createBook = async (
       return
     }
 
-    if (typeof total_pages !== 'number' || total_pages <= 0) {
+    const pages = parseInt(total_pages, 10) || 100
+    if (pages <= 0) {
       res.status(400).json({ error: 'Total pages must be a positive number' })
       return
     }
@@ -100,9 +100,8 @@ export const createBook = async (
         description,
         category,
         difficulty,
-        total_pages,
-        isbn: isbn || null,
-        cover_url: cover_url || null,
+        total_pages: pages,
+        cover_image_url: cover_image_url || null,
         views: 0,
         rating: 0,
       })
@@ -134,8 +133,7 @@ export const updateBook = async (
       category,
       difficulty,
       total_pages,
-      isbn,
-      cover_url,
+      cover_image_url,
       rating,
     } = req.body
 
@@ -165,14 +163,14 @@ export const updateBook = async (
       updates.difficulty = difficulty
     }
     if (total_pages !== undefined) {
-      if (typeof total_pages !== 'number' || total_pages <= 0) {
+      const pages = parseInt(total_pages, 10)
+      if (isNaN(pages) || pages <= 0) {
         res.status(400).json({ error: 'Total pages must be a positive number' })
         return
       }
-      updates.total_pages = total_pages
+      updates.total_pages = pages
     }
-    if (isbn !== undefined) updates.isbn = isbn
-    if (cover_url !== undefined) updates.cover_url = cover_url
+    if (cover_image_url !== undefined) updates.cover_image_url = cover_image_url
     if (rating !== undefined) {
       if (typeof rating !== 'number' || rating < 0 || rating > 5) {
         res.status(400).json({ error: 'Rating must be between 0 and 5' })

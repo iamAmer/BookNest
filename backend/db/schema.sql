@@ -17,10 +17,12 @@ CREATE TABLE IF NOT EXISTS auth_users (
 -- Profiles table
 CREATE TABLE IF NOT EXISTS profiles (
     id UUID PRIMARY KEY REFERENCES auth_users(id) ON DELETE CASCADE,
+    email TEXT,
     full_name TEXT,
     cefr_level TEXT CHECK (cefr_level IN ('A1', 'A2', 'B1', 'B2', 'C1', 'C2')),
     avatar_url TEXT,
     bio TEXT,
+    is_admin BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -144,3 +146,30 @@ CREATE INDEX idx_quiz_results_user ON quiz_results(user_id);
 CREATE INDEX idx_user_achievements_user ON user_achievements(user_id);
 CREATE INDEX idx_auth_users_email ON auth_users(email);
 CREATE INDEX idx_refresh_tokens_user ON refresh_tokens(user_id);
+
+-- Supabase Storage: books bucket RLS policies
+-- Note: Bucket must be created via Supabase UI or:
+-- INSERT INTO storage.buckets (id, name, public) VALUES ('books', 'books', true);
+
+-- Allow public read access to all files
+CREATE POLICY "Public read access"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'books');
+
+-- Allow authenticated users to upload files
+CREATE POLICY "Authenticated users can upload"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'books');
+
+-- Allow authenticated users to update their uploaded files
+CREATE POLICY "Authenticated users can update"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (bucket_id = 'books');
+
+-- Allow authenticated users to delete files
+CREATE POLICY "Authenticated users can delete"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (bucket_id = 'books');

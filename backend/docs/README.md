@@ -20,15 +20,14 @@ All backend implementation and setup documentation is organized here.
 
 ---
 
-### 1B. **SWAGGER_GUIDE.md** - Interactive API Documentation 🔍 NEW!
+### 4. **SWAGGER_GUIDE.md** - Interactive API Documentation 🔍
 
 **For:** Exploring and testing the API interactively  
 **Contains:**
 
 - How to access Swagger UI
 - Authentication flow
-- Testing endpoints
-- Try-it-out examples
+- Testing file upload endpoints
 - Common issues
 
 👉 **After setup, open http://localhost:5000/api-docs to explore API**
@@ -65,7 +64,7 @@ All backend implementation and setup documentation is organized here.
 
 ---
 
-### 4. **COMPLETION_REPORT.md** - Final Delivery Report
+### 5. **COMPLETION_REPORT.md** - Final Delivery Report
 
 **For:** Project completion summary  
 **Contains:**
@@ -80,7 +79,7 @@ All backend implementation and setup documentation is organized here.
 
 ---
 
-### 5. **BACKEND_COMPLETION_STATUS.md** - Status Tracking
+### 6. **BACKEND_COMPLETION_STATUS.md** - Status Tracking
 
 **For:** Tracking what's done and what needs work  
 **Contains:**
@@ -186,15 +185,15 @@ backend/
 
 - **Authentication:** `/api/auth` - 6 endpoints
 - **Profile:** `/api/profile` - 3 endpoints
-- **Books:** `/api/books` - 4 endpoints
+- **Books:** `/api/books` - 7 endpoints (listing + file uploads)
 - **Progress:** `/api/progress` - 2 endpoints
 - **Notes:** `/api/notes` - 4 endpoints
 - **Vocabulary:** `/api/vocabulary` - 5 endpoints
-- **Reader (AI):** `/api/reader` - 3 endpoints
+- **Reader (AI):** `/api/reader` - 5 endpoints
 - **Achievements:** `/api/achievements` - 1 endpoint
 - **Admin:** `/api/admin` - 7 endpoints
 
-**Total: 35+ API endpoints**
+**Total: 40+ API endpoints**
 
 ---
 
@@ -209,6 +208,7 @@ backend/
 ✅ **Core Features**
 
 - Book search & filtering
+- File upload to Supabase Storage (covers + content)
 - Reading progress tracking
 - Notes & annotations
 - Vocabulary management
@@ -219,9 +219,17 @@ backend/
 ✅ **Admin Features**
 
 - Platform statistics
-- Book management
+- Book management (CRUD)
+- File upload management (covers, PDFs, EPUBs)
 - User management
 - Admin promotion/demotion
+
+✅ **Supabase Storage**
+
+- Public `books` bucket with `covers/` and `content/` folders
+- RLS policies: public read, authenticated write/delete
+- Multer middleware for multipart uploads (10MB limit)
+- Auto-URL saving to `cover_image_url` and `content_url` columns
 
 ✅ **Security**
 
@@ -328,6 +336,6 @@ npm run dev
 
 **Status:** Backend 100% Complete ✅  
 **Ready for:** Frontend Integration, Testing, Production  
-**Last Updated:** April 23, 2026
+**Last Updated:** May 2026
 
 👉 **Start with BACKEND_SETUP.md**

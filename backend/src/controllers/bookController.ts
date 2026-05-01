@@ -1,5 +1,25 @@
 import { Request, Response } from 'express'
 import { supabaseAdmin } from '../config/supabase'
+import multer from 'multer'
+import path from 'path'
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowed = /\.(jpg|jpeg|png|gif|webp|pdf|epub)$/i
+    if (!file.originalname.match(allowed)) {
+      return cb(new Error('Only image, PDF, and EPUB files are allowed'))
+    }
+    cb(null, true)
+  },
+})
+
+export const uploadCover = upload.single('cover')
+
+export const uploadContent = upload.single('content')
 
 export const getBooks = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -85,6 +105,134 @@ export const getCategories = async (
   } catch (error: any) {
     console.error('Error fetching categories:', error)
     res.status(500).json({ error: error.message || 'Internal server error' })
+  }
+}
+
+export const handleUploadCover = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { id } = req.params
+    const file = req.file
+
+    if (!file) {
+      res.status(400).json({ error: 'No file uploaded' })
+      return
+    }
+
+    const ext = path.extname(file.originalname)
+    const filePath = `covers/${id}${ext}`
+
+    const { data, error } = await supabaseAdmin.storage
+      .from('books')
+      .upload(filePath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true,
+      })
+
+    if (error) throw error
+
+    const { data: urlData } = supabaseAdmin.storage
+      .from('books')
+      .getPublicUrl(filePath)
+
+    await supabaseAdmin
+      .from('books')
+      .update({ cover_image_url: urlData.publicUrl })
+      .eq('id', id)
+
+    res.json({
+      success: true,
+      data: { url: urlData.publicUrl },
+    })
+  } catch (error: any) {
+    console.error('Error uploading cover:', error)
+    res.status(500).json({ error: error.message || 'Failed to upload cover' })
+  }
+}
+
+export const handleUploadContent = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { id } = req.params
+    const file = req.file
+
+    if (!file) {
+      res.status(400).json({ error: 'No file uploaded' })
+      return
+    }
+
+    const ext = path.extname(file.originalname)
+    const filePath = `content/${id}${ext}`
+
+    const { data, error } = await supabaseAdmin.storage
+      .from('books')
+      .upload(filePath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true,
+      })
+
+    if (error) throw error
+
+    const { data: urlData } = supabaseAdmin.storage
+      .from('books')
+      .getPublicUrl(filePath)
+
+    await supabaseAdmin
+      .from('books')
+      .update({ content_url: urlData.publicUrl })
+      .eq('id', id)
+
+    res.json({
+      success: true,
+      data: { url: urlData.publicUrl },
+    })
+  } catch (error: any) {
+    console.error('Error uploading content:', error)
+    res.status(500).json({ error: error.message || 'Failed to upload content' })
+  }
+}
+
+export const deleteFile = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { id, type } = req.params
+
+    if (!['cover', 'content'].includes(type)) {
+      res.status(400).json({ error: 'Invalid file type. Use "cover" or "content"' })
+      return
+    }
+
+    const folder = type === 'cover' ? 'covers' : 'content'
+    const { data: files } = await supabaseAdmin.storage
+      .from('books')
+      .list(folder)
+
+    if (files) {
+      const toDelete = files.filter(f => f.name.startsWith(id))
+      if (toDelete.length > 0) {
+        const paths = toDelete.map(f => `${folder}/${f.name}`)
+        await supabaseAdmin.storage
+          .from('books')
+          .remove(paths)
+      }
+    }
+
+    const updateField = type === 'cover' ? 'cover_image_url' : 'content_url'
+    await supabaseAdmin
+      .from('books')
+      .update({ [updateField]: null })
+      .eq('id', id)
+
+    res.json({ success: true, message: `${type} file deleted` })
+  } catch (error: any) {
+    console.error('Error deleting file:', error)
+    res.status(500).json({ error: error.message || 'Failed to delete file' })
   }
 }
 

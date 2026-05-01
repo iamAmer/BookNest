@@ -1,16 +1,15 @@
 # 📖 BookNest Frontend
 
-The frontend for BookNest is a responsive React application built with Vite that provides an intuitive interface for users to browse books, take adaptive quizzes, track their progress, and improve their English language skills.
+The frontend for BookNest is a responsive React application built with Vite that provides an intuitive interface for users to browse books, take adaptive quizzes, track their progress, and manage book content through an admin panel.
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js (v16+)
-- npm or yarn
+- Node.js (v20+)
+- npm
 
 ### Installation
 ```bash
-cd frontend
 npm install
 ```
 
@@ -19,167 +18,182 @@ npm install
 npm run dev
 ```
 
-The application will be available at `http://localhost:5173`
+The application runs on `http://localhost:5173` and proxies `/api` requests to the backend at `http://localhost:5000`.
 
 ### Production Build
 ```bash
 npm run build
-```
-
-### Preview Production Build
-```bash
 npm run preview
 ```
 
 ## 🔧 Configuration
 
-The frontend automatically configures itself to communicate with the backend based on the current window location. No additional configuration is typically needed for development.
+### Vite Proxy
+The dev server automatically proxies API requests. Configured in `vite.config.js`:
+```js
+server: {
+  proxy: {
+    '/api': {
+      target: 'http://localhost:5000',
+      changeOrigin: true,
+    },
+  },
+}
+```
 
-For production deployments, ensure that:
-1. The backend is accessible from the frontend domain
-2. CORS is properly configured on the backend
-3. The build is deployed to a static hosting service
+### Axios Base URL
+Set globally in `src/main.jsx`:
+```js
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+```
+
+### Environment Variables
+Optional `.env` file:
+```
+VITE_API_URL=http://localhost:5000
+```
 
 ## 📁 Project Structure
 
 ```
 frontend/
-├── public/                 # Static assets
-├── src/                    # Source code
-│   ├── Components/         # Reusable UI components
-│   │   ├── Layout/         # Page layouts (GuestLayout, MainLayout)
-│   │   ├── Context/        # React Context providers (UserContext)
-│   │   ├── Home/           # Home page components
-│   │   ├── LearnLanguage/  # Language learning/quiz components
-│   │   ├── ProfileUser/    # User profile components
-│   │   ├── ...             # Other feature components
-│   ├── App.jsx             # Main application component with routing
-│   ├── App.css             # Global styles
-│   ├── index.css           # Tailwind CSS base styles
-│   └── main.jsx            # Entry point
-├── index.html              # HTML template
-├── package.json            # Dependencies and scripts
-├── vite.config.js          # Vite configuration
-├── eslint.config.js        # ESLint configuration
-└── README.md               # This file
+├── src/
+│   ├── Components/
+│   │   ├── AdminPanel/          # Admin book management + file uploads
+│   │   │   └── AdminPanel.jsx   # CRUD UI with cover/content upload
+│   │   ├── Context/
+│   │   │   └── UserContext.jsx  # Global auth state (userToken, userData)
+│   │   ├── Layout/
+│   │   │   ├── GuestLayout.jsx  # Unauthenticated pages layout
+│   │   │   └── MainLayout.jsx   # Authenticated pages layout
+│   │   ├── Login/               # Login form
+│   │   ├── Register/            # Registration form
+│   │   ├── Home/                # Landing page with animations
+│   │   ├── LearnLanguage/       # Book listing with covers + quiz
+│   │   ├── ProfileUser/         # User profile management
+│   │   ├── MainNavbar/          # Navigation (admin link for admins)
+│   │   ├── Category/            # Category browsing
+│   │   ├── CategoryType/        # Category detail page
+│   │   ├── SharSections/        # Spotlight, trending, stats sections
+│   │   └── ...
+│   ├── App.jsx                  # Hash-based routing
+│   ├── App.css                  # Global styles
+│   ├── index.css                # Tailwind CSS
+│   └── main.jsx                 # Entry point + Axios config
+├── index.html
+├── vite.config.js
+├── tailwind.config.js
+└── package.json
 ```
 
 ## 🛠️ Available Scripts
 
-- `npm run dev` - Start development server
+- `npm run dev` - Start development server with hot reload
 - `npm run build` - Build for production
-- `npm run preview` - Preview production build locally
-- `npm run lint` - Run ESLint for code quality
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
 
 ## 🧩 Key Features
 
-### User Authentication
-- Registration and login forms
-- JWT token storage and management
-- Protected routes for authenticated users
+### Authentication
+- Registration and login via Supabase Auth
+- JWT token stored in `localStorage` as `userToken`
+- `UserContext` provides `userToken`, `userData`, `isLoading`
+- Protected routes redirect unauthenticated users
+
+### Admin Panel (`/home/admin`)
+- Visible only to users with `isAdmin: true`
+- Create books with title, author, category, difficulty, description, total pages
+- Upload cover images (JPG, PNG, WebP, GIF) via file input
+- Upload book content (PDF, EPUB, max 10MB) via file input
+- Edit existing books with file replacement
+- Delete books and individual files
+- Book list with cover previews and metadata
 
 ### Book Discovery
-- Browse and search book catalog
-- Filter by category and difficulty level
-- View book details and ratings
-- Trending books showcase
+- Browse book catalog from backend API
+- Filter by category and difficulty level (A1-C2)
+- Dynamic cover images from Supabase Storage
+- Fallback placeholder icon when cover missing
+- Trending books and category sections
 
 ### Language Learning
 - Adaptive quiz system based on CEFR levels
-- Vocabulary tracking and management
-- Progress visualization and statistics
-- Achievement system with badges
+- Quiz interface with progress tracking
+- Score calculation and results display
+- Achievement badges on quiz completion
 
 ### User Profile
 - Personal information management
 - Reading statistics and history
-- Book library and completed books
-- Avatar customization
+- Avatar customization (stored in localStorage)
 
 ## 🔌 API Integration
 
-The frontend communicates with the BookNest backend REST API at `/api/*` endpoints. Key integrated services include:
+All API calls use Axios with the token from `UserContext`:
 
-- Authentication (`/api/auth`)
-- User profiles (`/api/profile`)
-- Book catalog (`/api/books`)
-- Progress tracking (`/api/progress`)
-- Quiz system (`/api/reader`)
-- Vocabulary management (`/api/vocabulary`)
-- Achievements (`/api/achievements`)
+```js
+const response = await axios.get('/api/books', {
+  headers: { Authorization: `Bearer ${userToken}` }
+})
+```
+
+Key integrated services:
+- Authentication (`/api/auth/*`)
+- Book catalog (`/api/books/*`)
+- File uploads (`/api/books/:id/upload-cover`, `/api/books/:id/upload-content`)
+- Admin endpoints (`/api/admin/*`)
+- Quiz system (`/api/reader/*`)
+- User profiles (`/api/profile/*`)
 
 ## 💡 Development Guidelines
 
 ### Component Structure
-- Follow the existing component organization in `/src/Components`
-- Create new features in appropriately named subdirectories
-- Use functional components with React hooks
-- Implement proper PropTypes or TypeScript definitions
+- Functional components with React hooks
+- Lazy-loaded route components in `App.jsx`
+- Context for global auth state (`UserContext`)
 
 ### Styling
-- Uses TailwindCSS for utility-first styling
-- Follow existing color schemes and spacing conventions
-- Create reusable component classes when appropriate
-- Maintain responsive design principles
+- TailwindCSS for utility-first styling
+- Custom color palette: `#8B6F47`, `#6B5744`, `#D4A574`, `#F5E6D3`
+- AOS (Animate On Scroll) library for page animations
 
 ### State Management
-- Uses React Context for global state (UserContext)
-- Local component state for UI-specific data
-- Consider custom hooks for complex logic
-- Avoid prop drilling by lifting state appropriately
+- `UserContext` for auth state (token, user data)
+- `useState` for component-local state
+- No Redux or Zustand
 
-### Data Fetching
-- Uses Axios for HTTP requests
-- Centralize API calls in service files when possible
-- Implement proper loading and error states
-- Use React Query or similar for advanced caching (future enhancement)
-
-## � Testing
-
-Currently, the project doesn't have a test suite configured. Consider adding:
-- Unit tests with Jest and React Testing Library
-- Integration tests for critical user flows
-- End-to-end tests with Cypress or Playwright
-
-## 📱 Responsive Design
-
-The application is designed to be fully responsive:
-- Mobile-first approach
-- Tested on various screen sizes
-- Touch-friendly interfaces
-- Adaptive layouts for different devices
+### File Uploads
+File uploads use `FormData` with `multipart/form-data`:
+```js
+const formData = new FormData()
+formData.append('cover', file)
+await axios.post(`/api/books/${id}/upload-cover`, formData, {
+  headers: { 'Content-Type': 'multipart/form-data' }
+})
+```
 
 ## 🚨 Troubleshooting
 
-### Common Issues
+**Blank page / routing issues:**
+The app uses hash-based routing (`createHashRouter`). Access via `#/home` not `/home`.
 
-**Module not found errors:**
-```bash
-# Clear node_modules and reinstall
-rm -rf node_modules package-lock.json
-npm install
-```
+**API calls fail:**
+- Ensure backend is running on port 5000
+- Check Vite proxy is configured in `vite.config.js`
+- Verify axios baseURL in `main.jsx`
+
+**Admin panel not visible:**
+Your user needs `isAdmin: true` in the `profiles` table.
+
+**Cover images not loading:**
+Check `cover_image_url` is set on the book record. Upload via Admin Panel.
 
 **Port already in use:**
 ```bash
-# Change port in vite.config.js or kill existing process
-lsof -ti:5173 | xargs kill -9  # macOS/linux
+lsof -ti:5173 | xargs kill -9
 ```
-
-**Blank page after build:**
-- Check browser console for errors
-- Ensure backend API is accessible
-- Verify correct build output paths
-
-**CSS not applying:**
-- Verify TailwindCSS is properly configured
-- Check for typos in class names
-- Ensure purge content includes all template files
 
 ## 📄 License
 
-This project is part of the BookNest platform and follows the same licensing terms.
-
-## 👥 Contributing
-
-Please read the main repository's CONTRIBUTING.md for details on our code of conduct and the process for submitting pull requests.
+Part of the BookNest platform - MIT License.

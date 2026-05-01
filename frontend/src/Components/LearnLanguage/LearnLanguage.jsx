@@ -3,7 +3,7 @@ import { UserContext } from '../Context/UserContext';
 import axios from 'axios';
 
 export default function LearnLanguage() {
-  const { userData, token } = useContext(UserContext);
+  const { userData, userToken } = useContext(UserContext);
   const [books, setBooks] = useState([]);
   const [selectedBookId, setSelectedBookId] = useState(null);
   const [quizQuestions, setQuizQuestions] = useState([]);
@@ -23,7 +23,7 @@ export default function LearnLanguage() {
     try {
       setLoading(true);
       const response = await axios.get('/api/books', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${userToken}` }
       });
       setBooks(response.data.data || response.data);
     } catch (err) {
@@ -50,7 +50,7 @@ export default function LearnLanguage() {
       const cefrLevel = 'B1'; // Placeholder - should come from user profile
       const response = await axios.get(`/api/reader/quiz/${bookId}`, {
         params: { cefr_level: cefrLevel, numQuestions: 5 },
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${userToken}` }
       });
       setQuizQuestions(response.data.data || response.data);
     } catch (err) {
@@ -84,7 +84,7 @@ export default function LearnLanguage() {
           total_questions: quizQuestions.length
         },
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${userToken}` }
         }
       );
       setQuizResult(response.data.data || response.data);
@@ -140,19 +140,25 @@ export default function LearnLanguage() {
                 <div 
                   key={book.id} 
                   onClick={() => handleBookSelect(book.id)}
-                  className="cursor-pointer bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6 border-2 border-transparent hover:border-[#8B6F47]"
+                  className="cursor-pointer bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden border-2 border-transparent hover:border-[#8B6F47]"
                 >
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 w-16 h-16 bg-[#F5E6D3] rounded-xl flex items-center justify-center mr-4">
-                      <i className="fa-solid fa-book text-[#8B6F47] text-xl"></i>
+                  {book.cover_image_url ? (
+                    <img
+                      src={book.cover_image_url}
+                      alt={book.title}
+                      className="w-full h-40 object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-40 bg-[#F5E6D3] flex items-center justify-center">
+                      <i className="fa-solid fa-book text-[#8B6F47] text-3xl"></i>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-[#6B5744] mb-1">{book.title}</h3>
-                      <p className="text-sm text-[#A0907D]">{book.author}</p>
-                      <p className="text-xs text-[#D4A574] mt-1">
-                        <i className="fa-solid fa-star mr-1"></i>{book.rating || '4.5'}
-                      </p>
-                    </div>
+                  )}
+                  <div className="p-4">
+                    <h3 className="font-semibold text-[#6B5744] mb-1">{book.title}</h3>
+                    <p className="text-sm text-[#A0907D]">{book.author}</p>
+                    <p className="text-xs text-[#D4A574] mt-1">
+                      <i className="fa-solid fa-star mr-1"></i>{book.rating || '4.5'}
+                    </p>
                   </div>
                 </div>
               ))}

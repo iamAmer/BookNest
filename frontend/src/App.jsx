@@ -31,6 +31,9 @@ const LearnLanguage = lazy(
 const ProfileUser = lazy(
   () => import('./Components/ProfileUser/ProfileUser.jsx'),
 )
+const AdminPanel = lazy(
+  () => import('./Components/AdminPanel/AdminPanel.jsx'),
+)
 
 function PageLoader() {
   return (
@@ -76,6 +79,7 @@ const router = createHashRouter([
       { path: 'category', element: <Category /> },
       { path: 'categoryType', element: <CategoryType /> },
       { path: 'profile', element: <ProfileUser /> },
+      { path: 'admin', element: <AdminPanel /> },
       { path: '*', element: <NotFound /> },
     ],
   },

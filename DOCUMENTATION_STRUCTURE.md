@@ -1,6 +1,7 @@
 # 📚 BookNest Documentation Structure
 
 **Organization Date:** April 23, 2026  
+**Last Updated:** May 2026  
 **Status:** ✅ Complete and Production-Ready
 
 ---
@@ -10,8 +11,8 @@
 ### 🚀 **Getting Started**
 
 1. **Project Overview:** [docs/PRD.md](docs/PRD.md)
-2. **Backend Setup:** [backend/docs/BACKEND_SETUP.md](backend/docs/BACKEND_SETUP.md)
-3. **API Reference:** [backend/docs/IMPLEMENTATION_COMPLETE.md](backend/docs/IMPLEMENTATION_COMPLETE.md)
+2. **Backend Setup:** [backend/README.md](backend/README.md)
+3. **API Reference:** [backend/docs/SWAGGER_GUIDE.md](backend/docs/SWAGGER_GUIDE.md)
 
 ### 📦 **Full Documentation**
 
@@ -19,44 +20,22 @@
 BookNest/
 │
 ├── 📄 ROOT LEVEL (General Project Info)
-│   ├── README_IMPLEMENTATION.md (Implementation overview)
-│   ├── DOCUMENTATION_INDEX.md (Detailed index)
-│   ├── DELIVERABLES_SUMMARY.md (Project summary)
+│   ├── README.md (Project overview + quick start)
 │   └── DOCUMENTATION_STRUCTURE.md (This file)
 │
 ├── 📁 docs/ (Project-Level Documentation)
-│   ├── README.md ← Documentation guide & navigation
-│   └── PRD.md ← Product Requirements Document
+│   ├── PRD.md ← Product Requirements Document
+│   └── DATABASE_CONTRACT.md ← Database schema + Storage rules
 │
-└── 📁 backend/ (Backend Implementation)
-    ├── README.md ← Quick reference
-    ├── package.json (Dependencies)
-    ├── tsconfig.json (TypeScript config)
-    ├── docker-compose.yml (Database setup)
-    │
-    ├── 📁 src/ (Source Code)
-    │   ├── server.ts
-    │   ├── config/database.ts
-    │   ├── controllers/ (9 feature controllers)
-    │   ├── routes/ (9 API route modules)
-    │   ├── middleware/ (auth, validation)
-    │   └── utils/ (utilities)
-    │
-    ├── 📁 db/ (Database)
-    │   ├── schema.sql (11 tables)
-    │   └── seed.sql (Sample data)
-    │
-    ├── 📁 build/ (Compiled JavaScript)
-    │   └── (auto-generated)
-    │
-    └── 📁 docs/ (Backend Documentation) ⭐ READ THESE
-        ├── README.md ← **START HERE FOR BACKEND**
-        ├── BACKEND_SETUP.md (Setup & deployment)
-        ├── IMPLEMENTATION_COMPLETE.md (Full API reference)
-        ├── MIGRATION_PROMPT.md (Architecture & design)
-        ├── DETAILED_IMPLEMENTATION_PROMPT.md (Developer guide)
-        ├── COMPLETION_REPORT.md (Final delivery report)
-        └── BACKEND_COMPLETION_STATUS.md (Progress tracking)
+├── 📁 backend/ (Backend Implementation)
+│   ├── README.md ← Backend API reference + file upload docs
+│   ├── src/ (Source code)
+│   ├── db/ (Database schema + migrations)
+│   └── docs/ (Backend documentation)
+│
+└── 📁 frontend/ (Frontend Implementation)
+    ├── README.md ← Frontend setup + admin panel docs
+    └── src/ (React components)
 ```
 
 ---
@@ -67,11 +46,11 @@ BookNest/
 
 **Best Path:**
 
-1. [backend/docs/README.md](backend/docs/README.md) - Overview (5 min)
-2. [backend/docs/BACKEND_SETUP.md](backend/docs/BACKEND_SETUP.md) - Instructions (15 min)
-3. [backend/README.md](backend/README.md) - Quick reference
+1. [README.md](README.md) - Project overview (5 min)
+2. [backend/README.md](backend/README.md) - Backend setup (10 min)
+3. [frontend/README.md](frontend/README.md) - Frontend setup (5 min)
 
-**Result:** Backend running on localhost:5000 ✅
+**Result:** Full stack running locally ✅
 
 ---
 
@@ -79,11 +58,11 @@ BookNest/
 
 **Best Path:**
 
-1. [backend/docs/IMPLEMENTATION_COMPLETE.md](backend/docs/IMPLEMENTATION_COMPLETE.md) - All endpoints
-2. [docs/PRD.md](docs/PRD.md) - Feature overview
-3. [backend/docs/README.md](backend/docs/README.md) - Setup if needed
+1. [backend/README.md](backend/README.md) - All endpoints listed
+2. [backend/docs/SWAGGER_GUIDE.md](backend/docs/SWAGGER_GUIDE.md) - Interactive API docs
+3. `http://localhost:5000/api-docs` - Swagger UI
 
-**Result:** Know all 35+ endpoints and how to call them ✅
+**Result:** Know all 40+ endpoints and how to call them ✅
 
 ---
 
@@ -91,9 +70,9 @@ BookNest/
 
 **Best Path:**
 
-1. [docs/PRD.md](docs/PRD.md) - Product overview (20 min)
-2. [backend/docs/MIGRATION_PROMPT.md](backend/docs/MIGRATION_PROMPT.md) - System design (20 min)
-3. [backend/docs/DETAILED_IMPLEMENTATION_PROMPT.md](backend/docs/DETAILED_IMPLEMENTATION_PROMPT.md) - Implementation details (25 min)
+1. [docs/PRD.md](docs/PRD.md) - Product overview
+2. [docs/DATABASE_CONTRACT.md](docs/DATABASE_CONTRACT.md) - Database + Storage design
+3. [backend/README.md](backend/README.md) - Backend architecture
 
 **Result:** Deep understanding of system design ✅
 
@@ -103,139 +82,84 @@ BookNest/
 
 **Best Path:**
 
-1. [backend/docs/README.md](backend/docs/README.md) - Backend guide
-2. [backend/docs/DETAILED_IMPLEMENTATION_PROMPT.md](backend/docs/DETAILED_IMPLEMENTATION_PROMPT.md) - How to add features
-3. [backend/README.md](backend/README.md) - Quick commands
-4. [backend/docs/IMPLEMENTATION_COMPLETE.md](backend/docs/IMPLEMENTATION_COMPLETE.md) - API reference
+1. [backend/README.md](backend/README.md) - Backend API reference
+2. [frontend/README.md](frontend/README.md) - Frontend structure + file upload guide
+3. [docs/DATABASE_CONTRACT.md](docs/DATABASE_CONTRACT.md) - Database schema
 
 **Result:** Ready to contribute and add features ✅
 
 ---
 
-### For Project Verification
-
-**Best Path:**
-
-1. [backend/docs/COMPLETION_REPORT.md](backend/docs/COMPLETION_REPORT.md) - What's complete (10 min)
-2. [backend/docs/BACKEND_COMPLETION_STATUS.md](backend/docs/BACKEND_COMPLETION_STATUS.md) - Detailed status (10 min)
-3. [DELIVERABLES_SUMMARY.md](DELIVERABLES_SUMMARY.md) - Project summary
-
-**Result:** Confidence project is complete ✅
-
----
-
 ## 📊 Documentation Inventory
 
-### Root Level (General Project)
+### Root Level
 
-| File                       | Size        | Purpose                    |
-| -------------------------- | ----------- | -------------------------- |
-| README_IMPLEMENTATION.md   | 11 KB       | Implementation overview    |
-| DOCUMENTATION_INDEX.md     | 12 KB       | Detailed index of all docs |
-| DELIVERABLES_SUMMARY.md    | 11 KB       | Project deliverables       |
-| DOCUMENTATION_STRUCTURE.md | (This file) | Organization map           |
+| File | Purpose |
+|------|---------|
+| README.md | Project overview, quick start, architecture |
+| DOCUMENTATION_STRUCTURE.md | Organization map |
 
-### docs/ Folder (Project-Level)
+### docs/ Folder
 
-| File      | Size  | Purpose              |
-| --------- | ----- | -------------------- |
-| README.md | 8 KB  | Navigation guide     |
-| PRD.md    | 19 KB | Product requirements |
+| File | Purpose |
+|------|---------|
+| PRD.md | Product requirements |
+| DATABASE_CONTRACT.md | Database schema + Supabase Storage rules |
 
-### backend/docs/ Folder (Backend-Specific) ⭐
+### backend/ Folder
 
-| File                              | Size  | Purpose            | Read Time |
-| --------------------------------- | ----- | ------------------ | --------- |
-| README.md                         | 7 KB  | Backend guide      | 5 min     |
-| BACKEND_SETUP.md                  | 8 KB  | Setup & deployment | 15 min    |
-| IMPLEMENTATION_COMPLETE.md        | 18 KB | Full API reference | 25 min    |
-| MIGRATION_PROMPT.md               | 14 KB | Architecture guide | 20 min    |
-| DETAILED_IMPLEMENTATION_PROMPT.md | 16 KB | Developer guide    | 25 min    |
-| COMPLETION_REPORT.md              | 13 KB | Final report       | 10 min    |
-| BACKEND_COMPLETION_STATUS.md      | 12 KB | Status tracking    | 10 min    |
+| File | Purpose |
+|------|---------|
+| README.md | Backend API reference + Storage integration docs |
+| docs/README.md | Backend documentation index |
+| docs/SWAGGER_GUIDE.md | Interactive API documentation guide |
+
+### frontend/ Folder
+
+| File | Purpose |
+|------|---------|
+| README.md | Frontend setup + admin panel + file upload guide |
 
 ---
 
 ## ✨ What's Where
 
-### Backend Setup Instructions
-
-→ [backend/docs/BACKEND_SETUP.md](backend/docs/BACKEND_SETUP.md)
-
-### All API Endpoints (35+)
-
-→ [backend/docs/IMPLEMENTATION_COMPLETE.md](backend/docs/IMPLEMENTATION_COMPLETE.md)
-
-### How to Add Features
-
-→ [backend/docs/DETAILED_IMPLEMENTATION_PROMPT.md](backend/docs/DETAILED_IMPLEMENTATION_PROMPT.md)
-
-### System Architecture
-
-→ [backend/docs/MIGRATION_PROMPT.md](backend/docs/MIGRATION_PROMPT.md)
-
-### Features & Requirements
-
-→ [docs/PRD.md](docs/PRD.md)
-
-### Quick Command Reference
-
+### Backend Setup + API
 → [backend/README.md](backend/README.md)
 
-### Project Status
+### File Upload Flow (Supabase Storage)
+→ [backend/README.md](backend/README.md) → "Supabase Storage Integration" section
+→ [docs/DATABASE_CONTRACT.md](docs/DATABASE_CONTRACT.md) → "File Upload Flow" section
 
-→ [backend/docs/COMPLETION_REPORT.md](backend/docs/COMPLETION_REPORT.md)
+### Frontend Admin Panel
+→ [frontend/README.md](frontend/README.md) → "Admin Panel" section
+
+### Database Schema
+→ [docs/DATABASE_CONTRACT.md](docs/DATABASE_CONTRACT.md)
+→ [backend/db/schema.sql](backend/db/schema.sql)
+
+### How to Add Features
+→ [backend/docs/README.md](backend/docs/README.md)
+
+### Features & Requirements
+→ [docs/PRD.md](docs/PRD.md)
 
 ---
 
 ## 🚀 Quick Start Commands
 
 ```bash
-# Navigate to backend
+# Backend
 cd backend
-
-# Install dependencies
 npm install
-
-# Start PostgreSQL
-docker-compose up -d
-
-# Build TypeScript
-npm run build
-
-# Start development server
+cp .env.example .env
 npm run dev
 
-# Test health endpoint
-curl http://localhost:5000/health
+# Frontend (new terminal)
+cd frontend
+npm install
+npm run dev
 ```
-
----
-
-## 📋 Reading Recommendations
-
-### Path 1: Quick Setup (30 minutes)
-
-1. [backend/docs/README.md](backend/docs/README.md) - (5 min)
-2. [backend/docs/BACKEND_SETUP.md](backend/docs/BACKEND_SETUP.md) - (20 min)
-3. Run commands & test
-4. Done! ✅
-
-### Path 2: Full Understanding (90 minutes)
-
-1. [docs/PRD.md](docs/PRD.md) - (20 min)
-2. [backend/docs/README.md](backend/docs/README.md) - (5 min)
-3. [backend/docs/BACKEND_SETUP.md](backend/docs/BACKEND_SETUP.md) - (15 min)
-4. [backend/docs/IMPLEMENTATION_COMPLETE.md](backend/docs/IMPLEMENTATION_COMPLETE.md) - (25 min)
-5. [backend/docs/MIGRATION_PROMPT.md](backend/docs/MIGRATION_PROMPT.md) - (20 min)
-6. Ready to develop! ✅
-
-### Path 3: Development Ready (120 minutes)
-
-1. All from Path 2
-2. [backend/docs/DETAILED_IMPLEMENTATION_PROMPT.md](backend/docs/DETAILED_IMPLEMENTATION_PROMPT.md) - (25 min)
-3. [backend/README.md](backend/README.md) - (5 min)
-4. Ready to contribute! ✅
 
 ---
 
@@ -243,124 +167,102 @@ curl http://localhost:5000/health
 
 ### Backend (100%)
 
-- ✅ 35+ API endpoints
-- ✅ Authentication system
-- ✅ Profile management
-- ✅ Book management
-- ✅ Progress tracking
+- ✅ 40+ API endpoints
+- ✅ Authentication system (Supabase Auth + JWT)
+- ✅ Profile management with `is_admin` role
+- ✅ Book management (CRUD)
+- ✅ Supabase Storage integration (file uploads)
+- ✅ Cover image upload (JPG, PNG, WebP, GIF)
+- ✅ Book content upload (PDF, EPUB)
+- ✅ File deletion from Storage + DB
+- ✅ Reading progress tracking
 - ✅ Notes system
 - ✅ Vocabulary manager
 - ✅ AI quiz integration
 - ✅ Achievement badges
 - ✅ Admin features
-- ✅ Input validation
 - ✅ Security implementation
 - ✅ Database schema
-- ✅ Docker setup
 - ✅ Comprehensive documentation
 
 ### Frontend (In Development)
 
-- ⏳ React setup
-- ⏳ UI components
-- ⏳ API integration
-
----
-
-## 🎯 Documentation Quality
-
-| Aspect       | Status       | Notes                      |
-| ------------ | ------------ | -------------------------- |
-| Completeness | ✅ 100%      | All components documented  |
-| Organization | ✅ Clear     | Backend docs in one folder |
-| Clarity      | ✅ Good      | 7 comprehensive guides     |
-| Examples     | ✅ Yes       | Code examples in docs      |
-| Setup        | ✅ Easy      | Quick start provided       |
-| API Docs     | ✅ Complete  | All endpoints documented   |
-| Architecture | ✅ Explained | Design docs provided       |
+- ✅ React setup with Vite
+- ✅ Auth flows (login/register)
+- ✅ API integration
+- ✅ Admin panel with file upload UI
+- ✅ Dynamic cover image rendering
+- ⏳ PDF/EPUB book reader
+- ⏳ Full category browsing
+- ⏳ Vocabulary UI
 
 ---
 
 ## 📞 Finding What You Need
 
-**Q: How do I set up the backend?**  
-A: [backend/docs/BACKEND_SETUP.md](backend/docs/BACKEND_SETUP.md)
+**Q: How do I set up the project?**  
+A: [README.md](README.md)
 
 **Q: What API endpoints exist?**  
-A: [backend/docs/IMPLEMENTATION_COMPLETE.md](backend/docs/IMPLEMENTATION_COMPLETE.md)
+A: [backend/README.md](backend/README.md) → "API Endpoints" section
 
-**Q: How is the system designed?**  
-A: [backend/docs/MIGRATION_PROMPT.md](backend/docs/MIGRATION_PROMPT.md)
+**Q: How do file uploads work?**  
+A: [backend/README.md](backend/README.md) → "Supabase Storage Integration"
 
-**Q: How do I add new features?**  
-A: [backend/docs/DETAILED_IMPLEMENTATION_PROMPT.md](backend/docs/DETAILED_IMPLEMENTATION_PROMPT.md)
+**Q: How is the database designed?**  
+A: [docs/DATABASE_CONTRACT.md](docs/DATABASE_CONTRACT.md)
 
-**Q: What features exist?**  
-A: [docs/PRD.md](docs/PRD.md)
+**Q: How do I use the admin panel?**  
+A: [frontend/README.md](frontend/README.md) → "Admin Panel" section
 
-**Q: Is everything complete?**  
-A: [backend/docs/COMPLETION_REPORT.md](backend/docs/COMPLETION_REPORT.md)
-
-**Q: What still needs work?**  
-A: [backend/docs/BACKEND_COMPLETION_STATUS.md](backend/docs/BACKEND_COMPLETION_STATUS.md)
+**Q: How do I make myself admin?**  
+A: [backend/README.md](backend/README.md) → "Key Fix: Admin Authentication"
 
 ---
 
 ## 🔗 Cross-References
 
-### Backend Setup Requires Knowing
+### Backend Setup Requires
 
-- Database schema → [db/schema.sql](backend/db/schema.sql)
-- Environment vars → [.env.example](backend/.env.example)
-- Docker setup → [docker-compose.yml](backend/docker-compose.yml)
+- Supabase project URL + keys → `.env`
+- Storage bucket named `books` → Supabase Dashboard → Storage
+- RLS policies → `backend/db/schema.sql`
 
-### API Reference References
+### Frontend Requires
 
-- Authentication → [backend/docs/BACKEND_SETUP.md](backend/docs/BACKEND_SETUP.md)
-- Database schema → [backend/db/schema.sql](backend/db/schema.sql)
-- Error handling → [backend/docs/IMPLEMENTATION_COMPLETE.md](backend/docs/IMPLEMENTATION_COMPLETE.md)
+- Backend running on port 5000
+- Vite proxy configured → `vite.config.js`
+- Axios baseURL → `src/main.jsx`
 
-### Architecture References
+### File Upload Flow
 
-- Database design → [backend/db/schema.sql](backend/db/schema.sql)
-- JWT implementation → [backend/src/utils/auth.ts](backend/src/utils/auth.ts)
-- API patterns → [backend/src/controllers/](backend/src/controllers/)
+- Bucket creation → Supabase Dashboard
+- RLS policies → `backend/db/schema.sql`
+- Backend upload logic → `backend/src/controllers/bookController.ts`
+- Frontend upload UI → `frontend/src/Components/AdminPanel/AdminPanel.jsx`
 
 ---
 
 ## 🏆 Organization Summary
 
-✅ **Centralized Backend Docs**
+✅ **Centralized Docs**
 
-- All 7 backend documentation files in `backend/docs/`
-- README.md serves as index
+- All component-level docs in respective folders
+- Root README serves as main entry point
 - Clear navigation between docs
-
-✅ **Project-Level Docs**
-
-- PRD.md in `docs/`
-- General info at root level
-- Separate from backend specifics
-
-✅ **Easy Navigation**
-
-- README files at each level
-- Cross-references between docs
-- Multiple reading paths available
 
 ✅ **Complete Coverage**
 
 - Setup instructions ✅
 - API documentation ✅
-- Architecture explanation ✅
-- Development guide ✅
-- Completion report ✅
-- Status tracking ✅
+- Database schema ✅
+- Storage integration ✅
+- File upload flow ✅
+- Admin panel docs ✅
 
 ---
 
-**Status:** ✅ Documentation Organized  
-**Date:** April 23, 2026  
-**Backend:** 100% Complete
-
-👉 **[Start Reading Backend Docs →](backend/docs/README.md)**
+**Status:** ✅ Documentation Updated  
+**Date:** May 2026  
+**Backend:** 100% Complete ✅  
+**Frontend:** In Development (Admin Panel ✅, Auth ✅, Book Browsing ✅)

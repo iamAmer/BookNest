@@ -94,6 +94,18 @@ export default function MainNavbar() {
                     <i className="fa-regular fa-user text-[#C4A574] w-4"></i>
                     Your Profile
                   </button>
+                  {userData?.isAdmin && (
+                    <button
+                      onClick={() => {
+                        navigate("admin");
+                        setDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-[#8B6F47] hover:bg-[#F5E6D3] flex items-center gap-2 transition-colors"
+                    >
+                      <i className="fa-solid fa-shield-halved text-[#C4A574] w-4"></i>
+                      Admin Panel
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       logOut();
@@ -145,6 +157,11 @@ export default function MainNavbar() {
             <NavLink to={"learnlanguage"} className="text-sm/6 text-gray-900">
               Learn Language
             </NavLink>
+            {userData?.isAdmin && (
+              <NavLink to={"admin"} className="text-sm/6 text-[#8B6F47] font-medium">
+                <i className="fa-solid fa-shield-halved mr-1"></i>Admin
+              </NavLink>
+            )}
             <NavLink
               to={"kids"}
               className="text-sm/6 text-gray-900 bg-[#FFE8F0] px-5 py-2 rounded-2xl shadow-[0_1px_3px_0px_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1)] border-[0.8px] border-[#FFD4E5]"

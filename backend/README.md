@@ -1,275 +1,216 @@
 # ⚙️ BookNest Backend
 
-The backend for BookNest is a RESTful API built with Node.js, Express, and TypeScript that provides all the core functionality for the adaptive reading platform. It handles user authentication, book management, AI-driven quiz generation (integrated via Gemini API), progress tracking, and more, all backed by a PostgreSQL database.
+The backend for BookNest is a RESTful API built with Node.js, Express, and TypeScript. It handles user authentication, book management, file uploads to Supabase Storage, AI-driven quiz generation (via Gemini API), progress tracking, and admin operations.
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Docker and Docker Compose (for PostgreSQL)
-- Node.js (v16+)
-- npm or yarn
+- Node.js (v20+)
+- npm
+- Supabase project (PostgreSQL + Storage)
 
 ### Quick Start
 
-1. Start the database:
-```bash
-docker-compose up -d
-```
-
-2. Install dependencies:
 ```bash
 npm install
-```
-
-3. Build the TypeScript code:
-```bash
-npm run build
-```
-
-4. Start the development server:
-```bash
+cp .env.example .env
+# Edit .env with your Supabase credentials and Gemini API key
 npm run dev
 ```
 
-The API will be available at `http://localhost:5000`
+The API runs on `http://localhost:5000`
 
 ### Environment Setup
 
-Copy the example environment file and configure it:
-```bash
-cp .env.example .env
-# Edit .env with your configuration
+Required `.env` variables:
+
 ```
-
-## 🔧 Configuration
-
-The backend uses environment variables for configuration. Copy `.env.example` to `.env` and adjust the values:
-
-### Required Variables
-- `PORT` - Server port (default: 5000)
-- `GEMINI_API_KEY` - API key for Google Gemini AI services
-- `GEMINI_MODEL` - Gemini model version (e.g., gemini-2.0-flash)
-- `JWT_SECRET` - Secret key for JWT token signing
-- Database connection:
-  - `DB_HOST` - Database host (default: localhost)
-  - `DB_PORT` - Database port (default: 5432)
-  - `DB_USER` - Database username (default: postgres)
-  - `DB_PASSWORD` - Database password (default: postgres)
-  - `DB_NAME` - Database name (default: booknest)
-
-### Optional Variables
-- `NODE_ENV` - Environment (development/production)
-- `LOG_LEVEL` - Logging level
+PORT=5000
+NODE_ENV=development
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+JWT_SECRET=your_jwt_secret
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-2.5-flash
+```
 
 ## 📁 Project Structure
 
 ```
 backend/
-├── src/                    # TypeScript source code
-│   ├── controllers/        # Request handlers
-│   │   ├── authController.ts       # Authentication endpoints
-│   │   ├── profileController.ts    # User profile management
-│   │   ├── bookController.ts       # Book catalog and search
-│   │   ├── progressController.ts   # Reading progress tracking
-│   │   ├── vocabularyController.ts # Word bank management
-│   │   ├── notesController.ts      # User notes and annotations
-│   │   ├── aiController.ts         # AI and Quiz generation endpoints
-│   │   └── achievementsController.ts # Achievement system
-│   ├── middleware/         # Custom Express middleware
-│   │   ├── auth.ts         # JWT verification
-│   │   ├── validation.ts   # Input validation (to be implemented)
-│   │   └── ...             # Other middleware
-│   ├── routes/             # API route definitions
-│   │   ├── authRoutes.ts           # Authentication routes
-│   │   ├── profileRoutes.ts        # Profile routes
-│   │   ├── bookRoutes.ts           # Book routes
-│   │   ├── progressRoutes.ts       # Progress routes
-│   │   ├── vocabularyRoutes.ts     # Vocabulary routes
-│   │   ├── notesRoutes.ts          # Notes routes
-│   │   ├── aiRoutes.ts             # AI and Quiz routes
-│   ├── services/           # Business logic and external services
-│   │   └── aiService.ts            # Gemini AI integration logic
-│   │   └── achievementsRoutes.ts   # Achievement routes
-│   ├── config/             # Configuration files
-│   │   └── database.ts     # PostgreSQL connection pool
-│   ├── utils/              # Utility functions
-│   │   └── auth.ts         # JWT and password helpers
-│   ├── server.ts         # Express application setup
-│   └── ...                 # Other source files
-├── db/                     # Database files
-│   ├── schema.sql          # Database schema definition
-│   └── seed.sql            # Initial sample data
-├── docs/                   # Documentation files
-├── build/                  # Compiled JavaScript output
-├── node_modules/           # Dependencies
-├── package.json            # Project metadata and scripts
-├── tsconfig.json           # TypeScript configuration
-├── .env.example            # Environment variables template
-├── docker-compose.yml      # Docker services definition
-└── README.md               # This file
+├── src/
+│   ├── controllers/
+│   │   ├── authController.ts        # Registration, login, logout, password reset
+│   │   ├── profileController.ts     # User profile CRUD
+│   │   ├── bookController.ts        # Book listing, file uploads (covers/content)
+│   │   ├── adminController.ts       # Book CRUD, user management, stats
+│   │   └── ...
+│   ├── routes/
+│   │   ├── authRoutes.ts            # /api/auth/*
+│   │   ├── bookRoutes.ts            # /api/books/* + file upload routes
+│   │   ├── adminRoutes.ts           # /api/admin/*
+│   │   └── ...
+│   ├── middleware/
+│   │   ├── auth.ts                  # JWT verification + admin check
+│   │   └── ...
+│   ├── config/
+│   │   ├── supabase.ts              # Supabase client (anon + service role)
+│   │   └── swagger.ts               # OpenAPI config
+│   ├── utils/
+│   │   └── auth.ts                  # JWT helpers, password hashing
+│   └── server.ts                    # Express app entry
+├── db/
+│   ├── schema.sql                   # Tables + Supabase Storage RLS policies
+│   ├── seed.sql                     # Sample data
+│   └── migrations/
+│       └── 001_add_admin_to_profiles.sql
+└── docs/                            # Documentation
 ```
 
 ## 🛠️ Available Scripts
 
 - `npm run dev` - Start development server with nodemon
 - `npm run build` - Compile TypeScript to JavaScript
-- `npm start` - Start production server (built code)
-- `npm test` - Run test suite (to be implemented)
+- `npm start` - Start production server
+- `npm test` - Run test suite
 
 ## 🔌 API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
-- `POST /api/auth/logout` - Logout user
-- `POST /api/auth/refresh` - Refresh access token
-- `GET /api/auth/status` - Check authentication status
-- `POST /api/auth/password-reset` - Request password reset
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Register new user |
+| POST | `/api/auth/login` | Login user |
+| POST | `/api/auth/logout` | Logout user |
+| POST | `/api/auth/refresh` | Refresh access token |
+| GET | `/api/auth/status` | Check authentication status |
+| POST | `/api/auth/password-reset` | Request password reset |
 
 ### User Profile
-- `GET /api/profile` - Get current user profile
-- `PUT /api/profile` - Update user profile
-- `GET /api/profile/:id` - Get user profile by ID
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/profile` | Get current user profile |
+| PUT | `/api/profile` | Update user profile |
+| GET | `/api/profile/:id` | Get user profile by ID |
 
-### Books & Library
-- `GET /api/books` - Get books with filtering and pagination
-- `GET /api/books/:id` - Get book by ID
-- `GET /api/books/categories` - Get all book categories
-- `GET /api/books/trending` - Get trending books
+### Books
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/books` | List books (filter, search, paginate) |
+| GET | `/api/books/:id` | Get book by ID |
+| GET | `/api/books/categories` | Get all categories |
+| GET | `/api/books/trending` | Get trending books |
 
-### Progress Tracking
-- `GET /api/progress` - Get user's reading progress
-- `POST /api/progress` - Update reading progress
-- `GET /api/progress/:bookId` - Get progress for specific book
+### File Uploads (Supabase Storage)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/books/:id/upload-cover` | Upload cover image (multipart) |
+| POST | `/api/books/:id/upload-content` | Upload book content PDF/EPUB (multipart) |
+| DELETE | `/api/books/:id/delete-file/:type` | Delete cover or content file |
 
-### Quiz System
-- `GET /api/reader/quiz/:bookId` - Get quiz questions for a book
-- `POST /api/reader/quiz/submit` - Submit quiz answers
-- `POST /api/reader/simplify` - Simplify sentence for user's level
-- `POST /api/reader/classify-level` - Classify CEFR level from PDF or text (Standalone)
-- `POST /api/reader/generate-quiz` - Generate quiz from PDF, text, or topic (Standalone)
+### Admin
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/admin/stats` | Platform statistics |
+| POST | `/api/admin/books` | Create book |
+| PUT | `/api/admin/books/:id` | Update book |
+| DELETE | `/api/admin/books/:id` | Delete book |
+| GET | `/api/admin/users` | List all users |
+| POST | `/api/admin/users/:userId/admin` | Promote user to admin |
+| DELETE | `/api/admin/users/:userId/admin` | Remove admin role |
 
-### Vocabulary Management
-- `GET /api/vocabulary` - Get user's vocabulary words
-- `POST /api/vocabulary` - Add new vocabulary word
-- `PUT /api/vocabulary/:id` - Update vocabulary word
-- `DELETE /api/vocabulary/:id` - Remove vocabulary word
+### AI / Reader
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/reader/quiz/:bookId` | Get quiz for a book |
+| POST | `/api/reader/quiz/submit` | Submit quiz answers |
+| POST | `/api/reader/simplify` | Simplify sentence for level |
+| POST | `/api/reader/classify-level` | Classify CEFR level from PDF |
+| POST | `/api/reader/generate-quiz` | Generate quiz from PDF/text |
 
-### Notes & Annotations
-- `GET /api/notes` - Get user's notes
-- `POST /api/notes` - Create new note
-- `PUT /api/notes/:id` - Update note
-- `DELETE /api/notes/:id` - Delete note
+## 📦 Supabase Storage Integration
 
-### Achievements
-- `GET /api/achievements` - Get all available achievements
-- `GET /api/user/achievements` - Get user's earned achievements
+### Bucket: `books`
+- **Public** bucket (readable by anyone)
+- **Authenticated** users can upload/delete
+- Folder structure:
+  - `covers/` - Book cover images (JPG, PNG, WebP, GIF)
+  - `content/` - Book content files (PDF, EPUB)
 
-### Admin Endpoints (Planned)
-- `GET /admin/stats` - Platform statistics
-- `POST /admin/books` - Add new book
-- `PUT /admin/books/:id` - Update book
-- `DELETE /admin/books/:id` - Delete book
+### RLS Policies
+Applied via `backend/db/schema.sql`:
+- `Public read access` - SELECT on `storage.objects`
+- `Authenticated users can upload` - INSERT
+- `Authenticated users can update` - UPDATE
+- `Authenticated users can delete` - DELETE
+
+### Upload Details
+- Max file size: **10MB**
+- Multer stores files in memory, streams directly to Supabase Storage
+- After upload, the public URL is saved to `books.cover_image_url` or `books.content_url`
 
 ## 🗄️ Database Schema
 
-The backend uses PostgreSQL with the following core tables:
+Core tables (see `db/schema.sql` for full definition):
 
-1. **users** - User accounts and authentication data
-2. **books** - Book catalog with metadata
-3. **categories** - Book classification categories
-4. **user_progress** - Reading progress tracking per user/book
-5. **vocabulary** - User's word bank with mastery levels
-6. **notes** - User's notes and annotations on books
-7. **achievements** - Definition of achievements and badges
-8. **user_achievements** - Junction table for user achievement tracking
-9. **quiz_results** - Storage of quiz attempts and scores
-10. **refresh_tokens** - JWT refresh token management
-11. **password_resets** - Password reset request tracking
+| Table | Purpose |
+|-------|---------|
+| `auth_users` | Custom auth (email, password_hash, is_admin) |
+| `profiles` | User profiles (email, full_name, cefr_level, avatar_url, is_admin) |
+| `books` | Book catalog (title, author, category, difficulty, cover_image_url, content_url) |
+| `user_progress` | Reading progress per user/book |
+| `vocabulary` | User word bank with mastery levels |
+| `notes` | Annotations linked to books |
+| `achievements` | System-defined badges |
+| `user_achievements` | User-to-achievement mapping |
+| `quiz_results` | Quiz attempt history |
+| `categories` | Book genres |
+| `refresh_tokens` | JWT refresh token management |
 
-Refer to `db/schema.sql` for the complete schema definition.
+### Key Fix: Admin Authentication
+The `is_admin` column exists in both `auth_users` and `profiles` tables. The middleware queries `profiles.is_admin` for role checks.
 
-## 🧪 Testing
-
-Currently, the backend has a basic test setup with Jest. To run tests:
-```bash
-npm test
+To make a user admin:
+```sql
+UPDATE profiles SET is_admin = true WHERE email = 'your@email.com';
 ```
 
 ## 📚 API Documentation
 
-Once the server is running, visit:
+When the server is running:
 - Swagger UI: `http://localhost:5000/api-docs`
 - Health Check: `http://localhost:5000/health`
-
-The Swagger UI provides interactive documentation for all available endpoints with the ability to test them directly.
 
 ## 🔍 Troubleshooting
 
 ### Database Connection Issues
-- Ensure Docker is running: `docker ps`
-- Check PostgreSQL status: `docker logs booknest-db`
-- Verify .env database credentials
-- Try manual connection: `psql -h localhost -U postgres -d booknest`
+- Verify Supabase credentials in `.env`
+- Check `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
 
-### Backend Startup Issues
-- Check if port 5000 is available: `lsof -i :5000`
-- Verify TypeScript compilation: `npx tsc --noEmit`
-- Check for missing dependencies: `npm install`
-- Look at error logs in terminal
+### File Upload Fails
+- Ensure `books` bucket exists in Supabase Dashboard → Storage
+- Verify RLS policies are applied (run schema.sql)
+- Check file type is allowed (jpg, jpeg, png, gif, webp, pdf, epub)
+- Max file size is 10MB
 
-### AI Integration Issues
-- Verify `GEMINI_API_KEY` is set correctly in `.env`
-- Ensure the `GEMINI_MODEL` is valid and accessible
-- Check internet connectivity for API requests to Google Generative AI
-- Monitor backend logs for rate limiting or API error responses
+### Admin Endpoints Return 403
+- Your user must have `is_admin = true` in `profiles` table
+- Check your auth token contains admin role
 
-### Authentication Problems
-- Verify JWT_SECRET is set in .env
-- Check token expiration settings
-- Ensure cookies are being set properly (for refresh tokens)
-- Clear browser cookies and localStorage if having auth issues
+### Server Startup Issues
+```bash
+# Verify TypeScript compilation
+npx tsc --noEmit
 
-## 📝 Environment Variables Example
+# Reinstall dependencies
+rm -rf node_modules
+npm install
 
+# Rebuild
+npm run build
 ```
-# Server Configuration
-PORT=5000
-GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-2.0-flash
-JWT_SECRET=your_super_secret_jwt_key_change_in_production
-
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_NAME=booknest
-
-# Environment
-NODE_ENV=development
-LOG_LEVEL=info
-```
-
-## 🤝 Contributing
-
-1. Ensure your code follows the existing TypeScript and ESLint conventions
-2. Write unit tests for new functionality
-3. Update API documentation in Swagger comments
-4. Keep commits focused and descriptive
-5. Update changelog for significant changes
 
 ## 📄 License
 
-This project is part of the BookNest platform and is licensed under the MIT License.
-
-## 👥 Authors
-
-- Book Nest Development Team
-
-## 🙏 Acknowledgments
-
-- Express.js and TypeScript communities
-- PostgreSQL team for the excellent database
-- Docker team for containerization excellence
-- All open source contributors whose work makes this possible
+MIT License - part of the BookNest platform.

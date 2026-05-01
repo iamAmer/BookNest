@@ -251,14 +251,18 @@ export default function Register() {
   async function register(values) {
     try {
       setLoading(true);
-      let { data } = await axios.post("https://ecommerce.routemisr.com/api/v1/auth/signup", values);
-      localStorage.setItem("userToken", data.token);
-      setUserData(data.user);
-      setUserToken(data.token);
+      let { data } = await axios.post("/api/auth/register", {
+        email: values.email,
+        password: values.password,
+        full_name: values.name,
+      });
+      localStorage.setItem("userToken", data.data.tokens.accessToken);
+      setUserData(data.data.user);
+      setUserToken(data.data.tokens.accessToken);
       navigate('/home');
     } catch (err) {
-      console.log(err.response.data.message);
-      setApiError(err.response.data.message);
+      console.log(err.response?.data?.error || err.response?.data?.message);
+      setApiError(err.response?.data?.error || err.response?.data?.message);
       setLoading(false);
     }
   }

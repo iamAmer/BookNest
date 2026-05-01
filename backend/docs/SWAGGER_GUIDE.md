@@ -91,6 +91,9 @@ Navigate to: **[http://localhost:5000/api-docs](http://localhost:5000/api-docs)*
 - **GET** `/api/books/{id}` - Get book details
 - **GET** `/api/books/categories` - List categories
 - **GET** `/api/books/trending` - Get trending books
+- **POST** `/api/books/{id}/upload-cover` - Upload cover image
+- **POST** `/api/books/{id}/upload-content` - Upload book content (PDF/EPUB)
+- **DELETE** `/api/books/{id}/delete-file/{type}` - Delete cover or content file
 
 ### Reading Progress
 
@@ -131,6 +134,24 @@ Navigate to: **[http://localhost:5000/api-docs](http://localhost:5000/api-docs)*
 - **GET** `/api/admin/users` - List users
 - **POST** `/api/admin/users/{userId}/admin` - Promote user
 - **DELETE** `/api/admin/users/{userId}/admin` - Demote user
+
+### File Uploads (Multipart/Form-Data)
+
+- **POST** `/api/books/{id}/upload-cover` - Upload cover image
+  - Field: `cover` (file)
+  - Allowed: JPG, JPEG, PNG, GIF, WebP
+  - Max: 10MB
+  - Returns: `{ success: true, data: { url: publicUrl } }`
+
+- **POST** `/api/books/{id}/upload-content` - Upload book content
+  - Field: `content` (file)
+  - Allowed: PDF, EPUB
+  - Max: 10MB
+  - Returns: `{ success: true, data: { url: publicUrl } }`
+
+- **DELETE** `/api/books/{id}/delete-file/{type}` - Delete file
+  - Type: `cover` or `content`
+  - Removes file from Supabase Storage + clears DB reference
 
 ---
 
@@ -273,8 +294,9 @@ The Swagger setup includes:
 ### Features
 
 ✅ **Full OpenAPI 3.0.0 Specification**  
-✅ **All 35+ Endpoints Documented**  
+✅ **All 40+ Endpoints Documented**  
 ✅ **Request/Response Schemas**  
+✅ **File Upload Endpoints (multipart/form-data)**  
 ✅ **Security Schemes (JWT Bearer)**  
 ✅ **Try-It-Out Functionality**  
 ✅ **Beautiful Explorer UI**  
@@ -330,7 +352,7 @@ All endpoints have defined schemas:
 
 - **Authentication** - 4 endpoints
 - **Profile** - 3 endpoints
-- **Books** - 4 endpoints
+- **Books** - 7 endpoints (listing + file uploads)
 - **Progress** - 2 endpoints
 - **Notes** - 4 endpoints
 - **Vocabulary** - 5 endpoints
@@ -338,7 +360,7 @@ All endpoints have defined schemas:
 - **Achievements** - 1 endpoint
 - **Admin** - 7 endpoints
 
-### Total: 35+ Documented Endpoints
+### Total: 40+ Documented Endpoints
 
 ---
 
@@ -485,6 +507,6 @@ Everything is documented and ready to test!
 ---
 
 **Status:** ✅ Swagger/OpenAPI Integration Complete  
-**Date:** April 23, 2026  
-**Total Endpoints:** 35+  
+**Date:** May 2026  
+**Total Endpoints:** 40+  
 **Documentation:** 100% Complete

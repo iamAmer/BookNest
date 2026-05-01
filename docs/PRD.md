@@ -10,7 +10,7 @@ Book Nest is a full-stack platform designed to facilitate English language learn
 
 **Backend:** Node.js + Express.js + TypeScript
 
-**Database & Auth:** Local PostgreSQL (via Docker) + JWT Authentication
+**Database & Auth:** Supabase (PostgreSQL + Storage + Auth)
 
 **AI Engine:** FastAPI (Python) service for simplification and quiz generation
 
@@ -26,9 +26,10 @@ Book Nest is a full-stack platform designed to facilitate English language learn
 
 - Category-based browsing (Fiction, History, Kids, etc.) as shown in Categories.png and Category 1.png
 - Difficulty badges indicating CEFR level
-- Book cards with cover images, titles, authors, and ratings
+- Book cards with cover images (from Supabase Storage), titles, authors, and ratings
 - Search and filter functionality by category, difficulty, and length
 - Guest browsing vs authenticated user experience
+- Dynamic cover images with fallback placeholder icons
 
 ### Reader UI
 
@@ -90,25 +91,38 @@ Book Nest is a full-stack platform designed to facilitate English language learn
 - Export options for sharing or archiving
 - Linking notes to specific vocabulary or concepts
 
-## 4. Database Schema (Local PostgreSQL via Docker)
+## 4. Database Schema (Supabase PostgreSQL + Storage)
 
 ### Infrastructure
 
-- PostgreSQL 15 running in Docker container
+- PostgreSQL 15 hosted on Supabase
 - Automatic schema initialization via `backend/db/schema.sql`
 - Seed data loaded from `backend/db/seed.sql`
-- Connection pooling via `pg` library (max 20 connections)
-- Automatic timestamp triggers for `updated_at` columns
-- Row-level security via application logic
+- Supabase client (`@supabase/supabase-js`) for database queries
+- Row-level security (RLS) policies for data isolation
+- Supabase Storage for file uploads (book covers, content)
+
+### Supabase Storage
+
+- **Bucket**: `books` (public)
+- **Folder structure**:
+    - `covers/` — Book cover images (JPG, PNG, WebP, GIF, max 10MB)
+    - `content/` — Book content files (PDF, EPUB, max 10MB)
+- **RLS Policies**:
+    - Public read access (anyone can view files)
+    - Authenticated write access (upload/update/delete)
 
 ### Core Tables
 
-**profiles:** Extends Supabase auth.users
+**profiles:** User profile data
 
-- id (uuid) - Primary key, references auth.users
+- id (uuid) - Primary key
+- email (text)
 - full_name (text)
 - cefr_level (text) - Constrained to: 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'
 - avatar_url (text)
+- bio (text)
+- is_admin (boolean) - Default FALSE, controls admin access
 - created_at (timestamp with time zone)
 - updated_at (timestamp with time zone)
 
@@ -119,9 +133,15 @@ Book Nest is a full-stack platform designed to facilitate English language learn
 - author (text)
 - category (text) - e.g., Fiction, History, Science, Kids
 - difficulty (text) - CEFR level: 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'
-- content_url (text) - Reference to storage or external content
+- description (text)
+- content (text) - Raw book content
+- content_url (text) - URL to PDF/EPUB in Supabase Storage
+- cover_image_url (text) - URL to cover image in Supabase Storage
 - total_pages (integer)
+- rating (decimal)
+- views (integer)
 - created_at (timestamp with time zone)
+- updated_at (timestamp with time zone)
 
 **user_progress:** Tracking reading progress
 
@@ -179,12 +199,14 @@ Book Nest is a full-stack platform designed to facilitate English language learn
 
 ### Additional Features
 
-- Connection pooling for database interactions
+- Supabase client for database interactions
+- Supabase Storage for file uploads with RLS policies
 - Indexes on frequently queried columns for performance
 - Foreign key constraints for referential integrity
 - Unique constraints to prevent duplicates
 - Automatic timestamp updates via application logic
 - JSON support for flexible achievement criteria storage
+- File upload via multipart/form-data (Multer → Supabase Storage)
 
 ## 5. API Endpoints
 
@@ -258,12 +280,21 @@ Book Nest is a full-stack platform designed to facilitate English language learn
 - `POST /api/achievements/check/:bookId` - Check for new achievements after reading
 - `GET /api/achievements/:id` - Get details for a specific achievement
 
+### File Uploads (Supabase Storage)
+
+- `POST /api/books/:id/upload-cover` - Upload cover image (multipart/form-data)
+- `POST /api/books/:id/upload-content` - Upload book content PDF/EPUB (multipart/form-data)
+- `DELETE /api/books/:id/delete-file/:type` - Delete cover or content file
+
 ### Admin & Moderation
 
-- `GET /admin/stats` - Platform usage statistics (admin only)
-- `POST /admin/books` - Add new book to catalog (admin only)
-- `PUT /admin/books/:id` - Update book information (admin only)
-- `DELETE /admin/books/:id` - Remove book from catalog (admin only)
+- `GET /api/admin/stats` - Platform usage statistics (admin only)
+- `POST /api/admin/books` - Add new book to catalog (admin only)
+- `PUT /api/admin/books/:id` - Update book information (admin only)
+- `DELETE /api/admin/books/:id` - Remove book from catalog (admin only)
+- `GET /api/admin/users` - List all users (admin only)
+- `POST /api/admin/users/:userId/admin` - Promote user to admin (admin only)
+- `DELETE /api/admin/users/:userId/admin` - Remove admin role (admin only)
 
 ## 6. AI Service Integration
 
@@ -323,8 +354,11 @@ This approach provides:
 ### Data Protection
 
 - Row Level Security (RLS) policies in Supabase
+- Supabase Storage RLS: public read, authenticated write
 - Input validation and sanitization on all endpoints
 - Protection against SQL injection and XSS attacks
+- File type validation for uploads (images, PDF, EPUB)
+- File size limits (10MB max)
 - Secure handling of user-generated content
 - Regular security audits and dependency updates
 
@@ -382,20 +416,20 @@ This approach provides:
 
 ### Environment Setup
 
-- Node.js >= 16.x
-- npm or yarn package manager
-- Supabase account and project
+- Node.js >= 20.x
+- npm package manager
+- Supabase account and project (PostgreSQL + Storage + Auth)
 - Python 3.9+ for AI service (separate repository)
 - Git for version control
 
 ### Local Development
 
 1. Clone repository
-2. Install Docker Desktop
-3. Start database: `docker-compose up -d`
-4. Configure environment variables (copy `.env.example` to `.env`)
-5. Install backend dependencies: `cd backend && npm install`
-6. Start backend: `npm run dev`
+2. Configure environment variables (copy `.env.example` to `.env` with Supabase credentials)
+3. Install backend dependencies: `cd backend && npm install`
+4. Start backend: `npm run dev`
+5. Install frontend dependencies: `cd frontend && npm install`
+6. Start frontend: `npm run dev`
 7. Ensure Python AI service is running on configured port
 8. Access frontend at http://localhost:5173
 
@@ -407,29 +441,21 @@ PORT=5000
 FRONTEND_URL=http://localhost:5173
 NODE_ENV=development
 
-# Local PostgreSQL Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=booknest
-DB_PASSWORD=booknest_password
-DB_NAME=booknest
+# Supabase Configuration
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 # JWT Configuration
 JWT_SECRET=your_super_secret_jwt_key_min_32_chars_long
-JWT_EXPIRATION=24h
-JWT_REFRESH_EXPIRATION=7d
 
 # Python AI Service
 PYTHON_SERVICE_URL=http://localhost:8000
 AI_SERVICE_TIMEOUT=10000
 
-# Optional Services
-REDIS_URL=redis://localhost:6379
-LOG_LEVEL=debug
-
-# Email Configuration
-SENDGRID_API_KEY=your_sendgrid_api_key_here
-SENDER_EMAIL=noreply@booknest.com
+# AI Configuration
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 ### Production Deployment
@@ -551,6 +577,6 @@ SENDER_EMAIL=noreply@booknest.com
 
 ---
 
-_Document Version: 1.0_
-_Last Updated: April 22, 2026_
+_Document Version: 1.1_
+_Last Updated: May 2026_
 _Prepared by: Book Nest Development Team_
