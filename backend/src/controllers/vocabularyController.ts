@@ -1,11 +1,6 @@
 import { Request, Response } from 'express'
-import { query } from '../config/database'
+import { supabaseAdmin } from '../config/supabase'
 
-/**
- * Save a word tapped in the UI to the user's personal list
- * @param req - Express request object
- * @param res - Express response object
- */
 export const saveVocabulary = async (
   req: Request,
   res: Response,
@@ -14,11 +9,8 @@ export const saveVocabulary = async (
     const userId = (req as any).user.id
     const { word, context_sentence, definition } = req.body
 
-    // Validate inputs
     if (!word || !context_sentence || !definition) {
-      res
-        .status(400)
-        .json({ error: 'Word, context sentence, and definition are required' })
+      res.status(400).json({ error: 'Word, context sentence, and definition are required' })
       return
     }
 
@@ -27,47 +19,57 @@ export const saveVocabulary = async (
       return
     }
 
-    // Check if word already exists for this user (to avoid duplicates)
-    const existingResult = await query(
-      'SELECT * FROM vocabulary WHERE user_id = $1 AND LOWER(word) = LOWER($2)',
-      [userId, word],
-    )
+    const { data: existing } = await supabaseAdmin
+      .from('vocabulary')
+      .select('*')
+      .eq('user_id', userId)
+      .ilike('word', word)
+      .single()
 
     let vocabData
 
-    if (existingResult.rows.length > 0) {
-      // Update existing vocabulary entry
-      const updateResult = await query(
-        'UPDATE vocabulary SET context_sentence = $1, definition = $2, last_reviewed = NOW() WHERE id = $3 RETURNING *',
-        [context_sentence, definition, existingResult.rows[0].id],
-      )
+    if (existing) {
+      const { data, error } = await supabaseAdmin
+        .from('vocabulary')
+        .update({
+          context_sentence,
+          definition,
+          last_reviewed: new Date().toISOString(),
+        })
+        .eq('id', existing.id)
+        .select()
+        .single()
 
-      vocabData = updateResult.rows[0]
+      if (error) throw error
+      vocabData = data
     } else {
-      // Create new vocabulary entry
-      const insertResult = await query(
-        'INSERT INTO vocabulary (user_id, word, context_sentence, definition, mastery_level, last_reviewed) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *',
-        [userId, word, context_sentence, definition, 0],
-      )
+      const { data, error } = await supabaseAdmin
+        .from('vocabulary')
+        .insert({
+          user_id: userId,
+          word,
+          context_sentence,
+          definition,
+          mastery_level: 0,
+          last_reviewed: new Date().toISOString(),
+        })
+        .select()
+        .single()
 
-      vocabData = insertResult.rows[0]
+      if (error) throw error
+      vocabData = data
     }
 
     res.status(201).json({
       success: true,
       data: vocabData,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error saving vocabulary:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }
 
-/**
- * Get user's vocabulary list
- * @param req - Express request object
- * @param res - Express response object
- */
 export const getVocabulary = async (
   req: Request,
   res: Response,
@@ -79,58 +81,39 @@ export const getVocabulary = async (
     const limitNum = Math.min(parseInt(limit as string) || 50, 100)
     const offsetNum = Math.max(0, parseInt(offset as string) || 0)
 
-    let sqlQuery = 'SELECT * FROM vocabulary WHERE user_id = $1'
-    let params: any[] = [userId]
+    let query = supabaseAdmin
+      .from('vocabulary')
+      .select('*', { count: 'exact' })
+      .eq('user_id', userId)
 
     if (mastery_level !== undefined) {
       const level = parseInt(mastery_level as string)
       if (level >= 0 && level <= 5) {
-        sqlQuery += ' AND mastery_level = $2'
-        params.push(level)
+        query = query.eq('mastery_level', level)
       }
     }
 
-    sqlQuery +=
-      ' ORDER BY last_reviewed DESC LIMIT $' +
-      (params.length + 1) +
-      ' OFFSET $' +
-      (params.length + 2)
-    params.push(limitNum, offsetNum)
+    query = query
+      .order('last_reviewed', { ascending: false })
+      .range(offsetNum, offsetNum + limitNum - 1)
 
-    const result = await query(sqlQuery, params)
+    const { data, error, count } = await query
 
-    // Get total count for pagination
-    let countQuery = 'SELECT COUNT(*) FROM vocabulary WHERE user_id = $1'
-    let countParams: any[] = [userId]
-
-    if (mastery_level !== undefined) {
-      const level = parseInt(mastery_level as string)
-      if (level >= 0 && level <= 5) {
-        countQuery += ' AND mastery_level = $2'
-        countParams.push(level)
-      }
-    }
-
-    const countResult = await query(countQuery, countParams)
+    if (error) throw error
 
     res.json({
       success: true,
-      data: result.rows,
-      count: parseInt(countResult.rows[0].count),
+      data: data || [],
+      count: count || 0,
       limit: limitNum,
       offset: offsetNum,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching vocabulary:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }
 
-/**
- * Update vocabulary mastery level
- * @param req - Express request object
- * @param res - Express response object
- */
 export const updateVocabularyReview = async (
   req: Request,
   res: Response,
@@ -140,54 +123,47 @@ export const updateVocabularyReview = async (
     const vocabId = req.params.id
     const { mastery_level } = req.body
 
-    // Validate mastery level
     if (mastery_level !== undefined) {
-      if (
-        typeof mastery_level !== 'number' ||
-        mastery_level < 0 ||
-        mastery_level > 5
-      ) {
+      if (typeof mastery_level !== 'number' || mastery_level < 0 || mastery_level > 5) {
         res.status(400).json({ error: 'Mastery level must be between 0 and 5' })
         return
       }
     }
 
-    // Verify vocabulary belongs to user
-    const checkResult = await query(
-      'SELECT * FROM vocabulary WHERE id = $1 AND user_id = $2',
-      [vocabId, userId],
-    )
+    const { data: check } = await supabaseAdmin
+      .from('vocabulary')
+      .select('*')
+      .eq('id', vocabId)
+      .eq('user_id', userId)
+      .single()
 
-    if (checkResult.rows.length === 0) {
+    if (!check) {
       res.status(404).json({ error: 'Vocabulary entry not found' })
       return
     }
 
-    const updateResult = await query(
-      'UPDATE vocabulary SET mastery_level = $1, last_reviewed = NOW() WHERE id = $2 RETURNING *',
-      [
-        mastery_level !== undefined
-          ? mastery_level
-          : checkResult.rows[0].mastery_level,
-        vocabId,
-      ],
-    )
+    const { data, error } = await supabaseAdmin
+      .from('vocabulary')
+      .update({
+        mastery_level: mastery_level ?? check.mastery_level,
+        last_reviewed: new Date().toISOString(),
+      })
+      .eq('id', vocabId)
+      .select()
+      .single()
+
+    if (error) throw error
 
     res.json({
       success: true,
-      data: updateResult.rows[0],
+      data,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating vocabulary review:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }
 
-/**
- * Get vocabulary statistics for the user
- * @param req - Express request object
- * @param res - Express response object
- */
 export const getVocabularyStats = async (
   req: Request,
   res: Response,
@@ -195,38 +171,36 @@ export const getVocabularyStats = async (
   try {
     const userId = (req as any).user.id
 
-    const result = await query(
-      `SELECT 
-        COUNT(*) as total_words,
-        SUM(CASE WHEN mastery_level >= 3 THEN 1 ELSE 0 END) as learned_words,
-        SUM(CASE WHEN mastery_level >= 5 THEN 1 ELSE 0 END) as mastered_words,
-        AVG(mastery_level) as average_mastery
-      FROM vocabulary WHERE user_id = $1`,
-      [userId],
-    )
+    const { data, error } = await supabaseAdmin
+      .from('vocabulary')
+      .select('mastery_level')
+      .eq('user_id', userId)
+
+    if (error) throw error
+
+    const total = data?.length || 0
+    const learned = data?.filter((w: any) => w.mastery_level >= 3).length || 0
+    const mastered = data?.filter((w: any) => w.mastery_level >= 5).length || 0
+    const avgMastery =
+      total > 0
+        ? data!.reduce((sum: number, w: any) => sum + (w.mastery_level || 0), 0) / total
+        : 0
 
     res.json({
       success: true,
       data: {
-        total_words: parseInt(result.rows[0].total_words),
-        learned_words: parseInt(result.rows[0].learned_words || 0),
-        mastered_words: parseInt(result.rows[0].mastered_words || 0),
-        average_mastery: parseFloat(
-          result.rows[0].average_mastery || 0,
-        ).toFixed(2),
+        total_words: total,
+        learned_words: learned,
+        mastered_words: mastered,
+        average_mastery: avgMastery.toFixed(2),
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching vocabulary stats:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }
 
-/**
- * Delete a vocabulary entry
- * @param req - Express request object
- * @param res - Express response object
- */
 export const deleteVocabulary = async (
   req: Request,
   res: Response,
@@ -235,25 +209,31 @@ export const deleteVocabulary = async (
     const userId = (req as any).user.id
     const vocabId = req.params.id
 
-    // Verify vocabulary belongs to user before deleting
-    const checkResult = await query(
-      'SELECT * FROM vocabulary WHERE id = $1 AND user_id = $2',
-      [vocabId, userId],
-    )
+    const { data: check } = await supabaseAdmin
+      .from('vocabulary')
+      .select('id')
+      .eq('id', vocabId)
+      .eq('user_id', userId)
+      .single()
 
-    if (checkResult.rows.length === 0) {
+    if (!check) {
       res.status(404).json({ error: 'Vocabulary entry not found' })
       return
     }
 
-    await query('DELETE FROM vocabulary WHERE id = $1', [vocabId])
+    const { error } = await supabaseAdmin
+      .from('vocabulary')
+      .delete()
+      .eq('id', vocabId)
+
+    if (error) throw error
 
     res.json({
       success: true,
       message: 'Vocabulary entry deleted successfully',
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting vocabulary:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }

@@ -1,20 +1,10 @@
 import { Request, Response } from 'express'
-import { query } from '../config/database'
-import {
-  hashPassword,
-  comparePasswords,
-  generateAccessToken,
-  generateRefreshToken,
-} from '../utils/auth'
+import { supabase, supabaseAdmin } from '../config/supabase'
 
-/**
- * Register a new user
- */
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password, full_name } = req.body
 
-    // Validate inputs
     if (!email || !password || !full_name) {
       res
         .status(400)
@@ -22,136 +12,111 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       res.status(400).json({ error: 'Invalid email format' })
       return
     }
 
-    // Check if user already exists
-    const existingUser = await query(
-      'SELECT id FROM auth_users WHERE email = $1',
-      [email],
-    )
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .single()
 
-    if (existingUser.rows.length > 0) {
+    if (existing) {
       res.status(409).json({ error: 'Email already registered' })
       return
     }
 
-    // Hash password
-    const passwordHash = await hashPassword(password)
-
-    // Create user
-    const result = await query(
-      'INSERT INTO auth_users (email, password_hash, full_name) VALUES ($1, $2, $3) RETURNING id, email, full_name',
-      [email, passwordHash, full_name],
-    )
-
-    const user = result.rows[0]
-
-    // Create profile
-    await query(
-      'INSERT INTO profiles (id, full_name, cefr_level) VALUES ($1, $2, $3)',
-      [user.id, full_name, 'A1'],
-    )
-
-    // Generate tokens
-    const accessToken = generateAccessToken({
-      userId: user.id,
-      email: user.email,
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name },
+      },
     })
-    const refreshToken = generateRefreshToken(user.id)
 
+    if (error) throw error
+    if (!data.user) throw new Error('User creation failed')
+
+    await supabaseAdmin.from('profiles').insert({
+      id: data.user.id,
+      email,
+      full_name,
+      cefr_level: 'A1',
+    })
+
+    const session = data.session
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
       data: {
         user: {
-          id: user.id,
-          email: user.email,
-          full_name: user.full_name,
+          id: data.user.id,
+          email: data.user.email,
+          full_name,
         },
         tokens: {
-          accessToken,
-          refreshToken,
+          accessToken: session?.access_token,
+          refreshToken: session?.refresh_token,
         },
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error registering user:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }
 
-/**
- * Login user
- */
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body
 
-    // Validate inputs
     if (!email || !password) {
       res.status(400).json({ error: 'Email and password are required' })
       return
     }
 
-    // Find user
-    const result = await query(
-      'SELECT id, email, password_hash, full_name, is_admin FROM auth_users WHERE email = $1 AND is_active = true',
-      [email],
-    )
-
-    if (result.rows.length === 0) {
-      res.status(401).json({ error: 'Invalid email or password' })
-      return
-    }
-
-    const user = result.rows[0]
-
-    // Verify password
-    const isPasswordValid = await comparePasswords(password, user.password_hash)
-
-    if (!isPasswordValid) {
-      res.status(401).json({ error: 'Invalid email or password' })
-      return
-    }
-
-    // Generate tokens
-    const accessToken = generateAccessToken({
-      userId: user.id,
-      email: user.email,
-      isAdmin: user.is_admin,
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     })
-    const refreshToken = generateRefreshToken(user.id)
+
+    if (error) throw error
+    if (!data.user || !data.session) {
+      res.status(401).json({ error: 'Invalid email or password' })
+      return
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, is_admin')
+      .eq('id', data.user.id)
+      .single()
 
     res.json({
       success: true,
       message: 'Login successful',
       data: {
         user: {
-          id: user.id,
-          email: user.email,
-          full_name: user.full_name,
-          isAdmin: user.is_admin,
+          id: data.user.id,
+          email: data.user.email,
+          full_name: profile?.full_name,
+          isAdmin: profile?.is_admin || false,
         },
         tokens: {
-          accessToken,
-          refreshToken,
+          accessToken: data.session.access_token,
+          refreshToken: data.session.refresh_token,
         },
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error logging in:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }
 
-/**
- * Refresh access token
- */
 export const refreshToken = async (
   req: Request,
   res: Response,
@@ -164,58 +129,43 @@ export const refreshToken = async (
       return
     }
 
-    // Get user from token (basic check - in production use proper validation)
-    const result = await query(
-      'SELECT id, email, is_admin FROM auth_users WHERE is_active = true',
-      [],
-    )
+    const { data, error } = await supabase.auth.refreshSession({
+      refresh_token: token,
+    })
 
-    if (result.rows.length === 0) {
-      res.status(401).json({ error: 'User not found' })
+    if (error || !data.session) {
+      res.status(401).json({ error: 'Invalid refresh token' })
       return
     }
-
-    const user = result.rows[0]
-
-    // Generate new access token
-    const newAccessToken = generateAccessToken({
-      userId: user.id,
-      email: user.email,
-      isAdmin: user.is_admin,
-    })
 
     res.json({
       success: true,
       data: {
-        accessToken: newAccessToken,
+        accessToken: data.session.access_token,
+        refreshToken: data.session.refresh_token,
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error refreshing token:', error)
     res.status(401).json({ error: 'Invalid refresh token' })
   }
 }
 
-/**
- * Logout user
- */
 export const logout = async (req: Request, res: Response): Promise<void> => {
   try {
-    // In JWT-based auth, logout is typically handled client-side (delete token)
-    // Server-side: can invalidate tokens via blacklist or token revocation table
+    const { error } = await supabase.auth.signOut()
+    if (error) throw error
+
     res.json({
       success: true,
       message: 'Logout successful',
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error logging out:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }
 
-/**
- * Get authentication status
- */
 export const getAuthStatus = async (
   req: Request,
   res: Response,
@@ -226,37 +176,32 @@ export const getAuthStatus = async (
       return
     }
 
-    // Get full user info
-    const result = await query(
-      'SELECT id, email, full_name, is_admin, created_at FROM auth_users WHERE id = $1',
-      [req.user.id],
-    )
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, is_admin, created_at')
+      .eq('id', req.user.id)
+      .single()
 
-    if (result.rows.length === 0) {
+    if (!profile) {
       res.status(404).json({ error: 'User not found' })
       return
     }
 
-    const user = result.rows[0]
-
     res.json({
       authenticated: true,
       user: {
-        id: user.id,
-        email: user.email,
-        full_name: user.full_name,
-        isAdmin: user.is_admin,
+        id: req.user.id,
+        email: req.user.email,
+        full_name: profile.full_name,
+        isAdmin: profile.is_admin,
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error checking auth status:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }
 
-/**
- * Password reset request
- */
 export const requestPasswordReset = async (
   req: Request,
   res: Response,
@@ -269,13 +214,11 @@ export const requestPasswordReset = async (
       return
     }
 
-    // Check if user exists
-    const result = await query('SELECT id FROM auth_users WHERE email = $1', [
-      email,
-    ])
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.FRONTEND_URL}/reset-password`,
+    })
 
-    if (result.rows.length === 0) {
-      // Don't reveal if email exists or not (security best practice)
+    if (error) {
       res.json({
         success: true,
         message: 'If email exists, reset link has been sent',
@@ -283,40 +226,48 @@ export const requestPasswordReset = async (
       return
     }
 
-    // In production: Generate reset token, save to DB, send email
-    // For now: Just return success message
     res.json({
       success: true,
       message: 'Password reset link sent to email',
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error requesting password reset:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.json({
+      success: true,
+      message: 'If email exists, reset link has been sent',
+    })
   }
 }
 
-/**
- * Reset password with token
- */
 export const resetPassword = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
-    const { token, newPassword } = req.body
+    const { newPassword } = req.body
 
-    if (!token || !newPassword) {
-      res.status(400).json({ error: 'Token and new password are required' })
+    if (!newPassword) {
+      res.status(400).json({ error: 'New password is required' })
       return
     }
 
-    // In production: Verify token, get user_id, update password
-    // For now: Return error (not implemented)
-    res.status(501).json({
-      error: 'Password reset implementation pending',
+    if (!req.user) {
+      res.status(401).json({ error: 'Authentication required' })
+      return
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
     })
-  } catch (error) {
+
+    if (error) throw error
+
+    res.json({
+      success: true,
+      message: 'Password updated successfully',
+    })
+  } catch (error: any) {
     console.error('Error resetting password:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }

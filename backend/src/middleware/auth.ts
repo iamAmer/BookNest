@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { verifyAccessToken } from '../utils/auth'
+import { supabase } from '../config/supabase'
 
 declare global {
   namespace Express {
@@ -13,17 +13,11 @@ declare global {
   }
 }
 
-/**
- * Middleware to verify JWT token
- * @param req - Express request object
- * @param res - Express response object
- * @param next - Express next function
- */
-export const authenticateJWT = (
+export const authenticateJWT = async (
   req: Request,
   res: Response,
   next: NextFunction,
-): void => {
+): Promise<void> => {
   const authHeader = req.headers.authorization
 
   if (!authHeader) {
@@ -31,7 +25,7 @@ export const authenticateJWT = (
     return
   }
 
-  const token = authHeader.split(' ')[1] // Bearer TOKEN
+  const token = authHeader.split(' ')[1]
 
   if (!token) {
     res.status(401).json({ error: 'Token required' })
@@ -39,11 +33,23 @@ export const authenticateJWT = (
   }
 
   try {
-    const decoded = verifyAccessToken(token)
+    const { data, error } = await supabase.auth.getUser(token)
+
+    if (error || !data.user) {
+      res.status(401).json({ error: 'Invalid or expired token' })
+      return
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', data.user.id)
+      .single()
+
     req.user = {
-      id: decoded.userId,
-      email: decoded.email,
-      isAdmin: decoded.isAdmin || false,
+      id: data.user.id,
+      email: data.user.email || '',
+      isAdmin: profile?.is_admin || false,
     }
     next()
   } catch (err) {
@@ -51,9 +57,6 @@ export const authenticateJWT = (
   }
 }
 
-/**
- * Middleware to check if user is admin
- */
 export const requireAdmin = (
   req: Request,
   res: Response,

@@ -1,11 +1,6 @@
 import { Request, Response } from 'express'
-import { query } from '../config/database'
+import { supabaseAdmin } from '../config/supabase'
 
-/**
- * Get user notes for a specific book
- * @param req - Express request object
- * @param res - Express response object
- */
 export const getNotes = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).user.id
@@ -20,35 +15,29 @@ export const getNotes = async (req: Request, res: Response): Promise<void> => {
     const limitNum = Math.min(parseInt(limit as string) || 50, 100)
     const offsetNum = Math.max(0, parseInt(offset as string) || 0)
 
-    const result = await query(
-      'SELECT * FROM notes WHERE user_id = $1 AND book_id = $2 ORDER BY created_at DESC LIMIT $3 OFFSET $4',
-      [userId, bookId, limitNum, offsetNum],
-    )
+    const { data, error, count } = await supabaseAdmin
+      .from('notes')
+      .select('*', { count: 'exact' })
+      .eq('user_id', userId)
+      .eq('book_id', bookId)
+      .order('created_at', { ascending: false })
+      .range(offsetNum, offsetNum + limitNum - 1)
 
-    // Get total count for pagination
-    const countResult = await query(
-      'SELECT COUNT(*) FROM notes WHERE user_id = $1 AND book_id = $2',
-      [userId, bookId],
-    )
+    if (error) throw error
 
     res.json({
       success: true,
-      data: result.rows,
-      count: parseInt(countResult.rows[0].count),
+      data: data || [],
+      count: count || 0,
       limit: limitNum,
       offset: offsetNum,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching notes:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }
 
-/**
- * Save a new note
- * @param req - Express request object
- * @param res - Express response object
- */
 export const createNote = async (
   req: Request,
   res: Response,
@@ -57,18 +46,13 @@ export const createNote = async (
     const userId = (req as any).user.id
     const { book_id, page_number, content } = req.body
 
-    // Validate inputs
     if (!book_id || page_number === undefined || !content) {
-      res
-        .status(400)
-        .json({ error: 'Book ID, page number, and content are required' })
+      res.status(400).json({ error: 'Book ID, page number, and content are required' })
       return
     }
 
     if (typeof page_number !== 'number' || page_number < 0) {
-      res
-        .status(400)
-        .json({ error: 'Page number must be a non-negative number' })
+      res.status(400).json({ error: 'Page number must be a non-negative number' })
       return
     }
 
@@ -77,26 +61,29 @@ export const createNote = async (
       return
     }
 
-    const result = await query(
-      'INSERT INTO notes (user_id, book_id, page_number, content) VALUES ($1, $2, $3, $4) RETURNING *',
-      [userId, book_id, page_number, content],
-    )
+    const { data, error } = await supabaseAdmin
+      .from('notes')
+      .insert({
+        user_id: userId,
+        book_id,
+        page_number,
+        content,
+      })
+      .select()
+      .single()
+
+    if (error) throw error
 
     res.status(201).json({
       success: true,
-      data: result.rows[0],
+      data,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating note:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }
 
-/**
- * Update an existing note
- * @param req - Express request object
- * @param res - Express response object
- */
 export const updateNote = async (
   req: Request,
   res: Response,
@@ -106,48 +93,45 @@ export const updateNote = async (
     const noteId = req.params.id
     const { content } = req.body
 
-    // Validate inputs
-    if (!content) {
+    if (!content || typeof content !== 'string' || content.trim().length === 0) {
       res.status(400).json({ error: 'Content is required' })
       return
     }
 
-    if (typeof content !== 'string' || content.trim().length === 0) {
-      res.status(400).json({ error: 'Content cannot be empty' })
-      return
-    }
+    const { data: check } = await supabaseAdmin
+      .from('notes')
+      .select('id')
+      .eq('id', noteId)
+      .eq('user_id', userId)
+      .single()
 
-    // Verify note belongs to user before updating
-    const checkResult = await query(
-      'SELECT * FROM notes WHERE id = $1 AND user_id = $2',
-      [noteId, userId],
-    )
-
-    if (checkResult.rows.length === 0) {
+    if (!check) {
       res.status(404).json({ error: 'Note not found' })
       return
     }
 
-    const updateResult = await query(
-      'UPDATE notes SET content = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
-      [content, noteId],
-    )
+    const { data, error } = await supabaseAdmin
+      .from('notes')
+      .update({
+        content,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', noteId)
+      .select()
+      .single()
+
+    if (error) throw error
 
     res.json({
       success: true,
-      data: updateResult.rows[0],
+      data,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating note:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }
 
-/**
- * Delete a note
- * @param req - Express request object
- * @param res - Express response object
- */
 export const deleteNote = async (
   req: Request,
   res: Response,
@@ -156,25 +140,31 @@ export const deleteNote = async (
     const userId = (req as any).user.id
     const noteId = req.params.id
 
-    // Verify note belongs to user before deleting
-    const checkResult = await query(
-      'SELECT * FROM notes WHERE id = $1 AND user_id = $2',
-      [noteId, userId],
-    )
+    const { data: check } = await supabaseAdmin
+      .from('notes')
+      .select('id')
+      .eq('id', noteId)
+      .eq('user_id', userId)
+      .single()
 
-    if (checkResult.rows.length === 0) {
+    if (!check) {
       res.status(404).json({ error: 'Note not found' })
       return
     }
 
-    await query('DELETE FROM notes WHERE id = $1', [noteId])
+    const { error } = await supabaseAdmin
+      .from('notes')
+      .delete()
+      .eq('id', noteId)
+
+    if (error) throw error
 
     res.json({
       success: true,
       message: 'Note deleted successfully',
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting note:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }

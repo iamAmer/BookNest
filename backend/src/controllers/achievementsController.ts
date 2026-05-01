@@ -1,31 +1,28 @@
 import { Request, Response } from 'express'
-import { query } from '../config/database'
+import { supabaseAdmin } from '../config/supabase'
 
-/**
- * Get all available achievements
- */
 export const getAchievements = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
-    const result = await query(
-      'SELECT * FROM achievements ORDER BY created_at DESC',
-    )
+    const { data, error } = await supabaseAdmin
+      .from('achievements')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
 
     res.json({
       success: true,
-      data: result.rows,
+      data: data || [],
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching achievements:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }
 
-/**
- * Get user's earned achievements
- */
 export const getUserAchievements = async (
   req: Request,
   res: Response,
@@ -33,29 +30,25 @@ export const getUserAchievements = async (
   try {
     const userId = req.user?.id
 
-    const result = await query(
-      `SELECT a.*, ua.earned_at 
-       FROM achievements a
-       INNER JOIN user_achievements ua ON a.id = ua.achievement_id
-       WHERE ua.user_id = $1
-       ORDER BY ua.earned_at DESC`,
-      [userId],
-    )
+    const { data, error } = await supabaseAdmin
+      .from('user_achievements')
+      .select('achievements(*), earned_at')
+      .eq('user_id', userId)
+      .order('earned_at', { ascending: false })
+
+    if (error) throw error
 
     res.json({
       success: true,
-      data: result.rows,
-      count: result.rows.length,
+      data: data || [],
+      count: data?.length || 0,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching user achievements:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }
 
-/**
- * Get specific achievement details
- */
 export const getAchievementById = async (
   req: Request,
   res: Response,
@@ -63,26 +56,27 @@ export const getAchievementById = async (
   try {
     const { id } = req.params
 
-    const result = await query('SELECT * FROM achievements WHERE id = $1', [id])
+    const { data, error } = await supabaseAdmin
+      .from('achievements')
+      .select('*')
+      .eq('id', id)
+      .single()
 
-    if (result.rows.length === 0) {
+    if (error || !data) {
       res.status(404).json({ error: 'Achievement not found' })
       return
     }
 
     res.json({
       success: true,
-      data: result.rows[0],
+      data,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching achievement:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }
 
-/**
- * Check for new achievements after reading/quiz completion
- */
 export const checkAchievements = async (
   req: Request,
   res: Response,
@@ -96,128 +90,81 @@ export const checkAchievements = async (
       return
     }
 
-    const newAchievements = []
+    const newAchievements: any[] = []
 
-    // Check: Book Completed
-    const progressResult = await query(
-      `SELECT COUNT(*) as count FROM user_progress 
-       WHERE user_id = $1 AND is_completed = true`,
-      [userId],
-    )
-    const booksCompleted = parseInt(progressResult.rows[0].count)
+    const { count: booksCompleted } = await supabaseAdmin
+      .from('user_progress')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('is_completed', true)
 
-    // Check "First Steps" achievement
-    if (booksCompleted === 1) {
-      const existingAchievement = await query(
-        `SELECT * FROM user_achievements 
-         WHERE user_id = $1 AND achievement_id IN (
-           SELECT id FROM achievements WHERE name = 'First Steps'
-         )`,
-        [userId],
-      )
+    const milestones = [
+      { count: 1, name: 'First Steps' },
+      { count: 5, name: 'Bookworm' },
+      { count: 10, name: 'Book Collector' },
+    ]
 
-      if (existingAchievement.rows.length === 0) {
-        const achievementResult = await query(
-          'SELECT id FROM achievements WHERE name = $1',
-          ['First Steps'],
-        )
+    for (const milestone of milestones) {
+      if (booksCompleted === milestone.count) {
+        const { data: achievement } = await supabaseAdmin
+          .from('achievements')
+          .select('id, name, description')
+          .eq('name', milestone.name)
+          .single()
 
-        if (achievementResult.rows.length > 0) {
-          await query(
-            `INSERT INTO user_achievements (user_id, achievement_id) 
-             VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-            [userId, achievementResult.rows[0].id],
-          )
-          newAchievements.push({
-            name: 'First Steps',
-            message: 'You completed your first book!',
-          })
+        if (achievement) {
+          const { data: existing } = await supabaseAdmin
+            .from('user_achievements')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('achievement_id', achievement.id)
+            .single()
+
+          if (!existing) {
+            await supabaseAdmin.from('user_achievements').insert({
+              user_id: userId,
+              achievement_id: achievement.id,
+            })
+            newAchievements.push(achievement)
+          }
         }
       }
     }
 
-    // Check "Bookworm" achievement (5 books)
-    if (booksCompleted === 5) {
-      const achievementResult = await query(
-        'SELECT id FROM achievements WHERE name = $1',
-        ['Bookworm'],
-      )
+    const { count: wordsLearned } = await supabaseAdmin
+      .from('vocabulary')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
 
-      if (achievementResult.rows.length > 0) {
-        await query(
-          `INSERT INTO user_achievements (user_id, achievement_id) 
-           VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-          [userId, achievementResult.rows[0].id],
-        )
-        newAchievements.push({
-          name: 'Bookworm',
-          message: 'You completed 5 books!',
-        })
-      }
-    }
+    const wordMilestones = [
+      { count: 10, name: 'Vocabulary Apprentice' },
+      { count: 50, name: 'Vocabulary Master' },
+    ]
 
-    // Check "Book Collector" achievement (10 books)
-    if (booksCompleted === 10) {
-      const achievementResult = await query(
-        'SELECT id FROM achievements WHERE name = $1',
-        ['Book Collector'],
-      )
+    for (const milestone of wordMilestones) {
+      if (wordsLearned === milestone.count) {
+        const { data: achievement } = await supabaseAdmin
+          .from('achievements')
+          .select('id, name, description')
+          .eq('name', milestone.name)
+          .single()
 
-      if (achievementResult.rows.length > 0) {
-        await query(
-          `INSERT INTO user_achievements (user_id, achievement_id) 
-           VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-          [userId, achievementResult.rows[0].id],
-        )
-        newAchievements.push({
-          name: 'Book Collector',
-          message: 'You collected 10 books!',
-        })
-      }
-    }
+        if (achievement) {
+          const { data: existing } = await supabaseAdmin
+            .from('user_achievements')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('achievement_id', achievement.id)
+            .single()
 
-    // Check vocabulary achievements
-    const vocabResult = await query(
-      'SELECT COUNT(*) as count FROM vocabulary WHERE user_id = $1',
-      [userId],
-    )
-    const wordsLearned = parseInt(vocabResult.rows[0].count)
-
-    if (wordsLearned === 10) {
-      const achievementResult = await query(
-        'SELECT id FROM achievements WHERE name = $1',
-        ['Vocabulary Apprentice'],
-      )
-
-      if (achievementResult.rows.length > 0) {
-        await query(
-          `INSERT INTO user_achievements (user_id, achievement_id) 
-           VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-          [userId, achievementResult.rows[0].id],
-        )
-        newAchievements.push({
-          name: 'Vocabulary Apprentice',
-          message: 'You learned 10 words!',
-        })
-      }
-    }
-
-    if (wordsLearned === 50) {
-      const achievementResult = await query(
-        'SELECT id FROM achievements WHERE name = $1',
-        ['Vocabulary Master'],
-      )
-
-      if (achievementResult.rows.length > 0) {
-        await query(
-          `INSERT INTO user_achievements (user_id, achievement_id) 
-           VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-          [userId, achievementResult.rows[0].id],
-        )
-        newAchievements.push({
-          name: 'Vocabulary Master',
-          message: 'You learned 50 words!',
-        })
+          if (!existing) {
+            await supabaseAdmin.from('user_achievements').insert({
+              user_id: userId,
+              achievement_id: achievement.id,
+            })
+            newAchievements.push(achievement)
+          }
+        }
       }
     }
 
@@ -226,8 +173,8 @@ export const checkAchievements = async (
       newAchievements,
       totalAchievements: newAchievements.length,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error checking achievements:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }

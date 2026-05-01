@@ -1,6 +1,6 @@
 # ⚙️ BookNest Backend
 
-The backend for BookNest is a RESTful API built with Node.js, Express, and TypeScript that provides all the core functionality for the adaptive reading platform. It handles user authentication, book management, quiz processing, progress tracking, and more, all backed by a PostgreSQL database.
+The backend for BookNest is a RESTful API built with Node.js, Express, and TypeScript that provides all the core functionality for the adaptive reading platform. It handles user authentication, book management, AI-driven quiz generation (integrated via Gemini API), progress tracking, and more, all backed by a PostgreSQL database.
 
 ## 🚀 Getting Started
 
@@ -47,7 +47,8 @@ The backend uses environment variables for configuration. Copy `.env.example` to
 
 ### Required Variables
 - `PORT` - Server port (default: 5000)
-- `PYTHON_SERVICE_URL` - URL of the AI service (default: http://localhost:8000)
+- `GEMINI_API_KEY` - API key for Google Gemini AI services
+- `GEMINI_MODEL` - Gemini model version (e.g., gemini-2.0-flash)
 - `JWT_SECRET` - Secret key for JWT token signing
 - Database connection:
   - `DB_HOST` - Database host (default: localhost)
@@ -72,7 +73,7 @@ backend/
 │   │   ├── progressController.ts   # Reading progress tracking
 │   │   ├── vocabularyController.ts # Word bank management
 │   │   ├── notesController.ts      # User notes and annotations
-│   │   ├── aiController.ts         # AI service integration
+│   │   ├── aiController.ts         # AI and Quiz generation endpoints
 │   │   └── achievementsController.ts # Achievement system
 │   ├── middleware/         # Custom Express middleware
 │   │   ├── auth.ts         # JWT verification
@@ -85,7 +86,9 @@ backend/
 │   │   ├── progressRoutes.ts       # Progress routes
 │   │   ├── vocabularyRoutes.ts     # Vocabulary routes
 │   │   ├── notesRoutes.ts          # Notes routes
-│   │   ├── aiRoutes.ts             # AI service routes
+│   │   ├── aiRoutes.ts             # AI and Quiz routes
+│   ├── services/           # Business logic and external services
+│   │   └── aiService.ts            # Gemini AI integration logic
 │   │   └── achievementsRoutes.ts   # Achievement routes
 │   ├── config/             # Configuration files
 │   │   └── database.ts     # PostgreSQL connection pool
@@ -143,6 +146,8 @@ backend/
 - `GET /api/reader/quiz/:bookId` - Get quiz questions for a book
 - `POST /api/reader/quiz/submit` - Submit quiz answers
 - `POST /api/reader/simplify` - Simplify sentence for user's level
+- `POST /api/reader/classify-level` - Classify CEFR level from PDF or text (Standalone)
+- `POST /api/reader/generate-quiz` - Generate quiz from PDF, text, or topic (Standalone)
 
 ### Vocabulary Management
 - `GET /api/vocabulary` - Get user's vocabulary words
@@ -213,11 +218,11 @@ The Swagger UI provides interactive documentation for all available endpoints wi
 - Check for missing dependencies: `npm install`
 - Look at error logs in terminal
 
-### AI Service Integration Issues
-- Verify AI service is running on configured port
-- Check PYTHON_SERVICE_URL in .env
-- Test AI service directly: `curl http://localhost:8000/health`
-- Check backend logs for timeout errors
+### AI Integration Issues
+- Verify `GEMINI_API_KEY` is set correctly in `.env`
+- Ensure the `GEMINI_MODEL` is valid and accessible
+- Check internet connectivity for API requests to Google Generative AI
+- Monitor backend logs for rate limiting or API error responses
 
 ### Authentication Problems
 - Verify JWT_SECRET is set in .env
@@ -230,7 +235,8 @@ The Swagger UI provides interactive documentation for all available endpoints wi
 ```
 # Server Configuration
 PORT=5000
-PYTHON_SERVICE_URL=http://localhost:8000
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-2.0-flash
 JWT_SECRET=your_super_secret_jwt_key_change_in_production
 
 # Database Configuration

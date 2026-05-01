@@ -3,7 +3,6 @@ import cors from 'cors'
 import 'dotenv/config'
 import swaggerJsdoc from 'swagger-jsdoc'
 import swaggerUi from 'swagger-ui-express'
-import { closePool } from './config/database'
 
 import authRoutes from './routes/authRoutes'
 import profileRoutes from './routes/profileRoutes'
@@ -80,8 +79,7 @@ const server = app.listen(PORT, () => {
 // Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\n📛 Shutting down gracefully...')
-  server.close(async () => {
-    await closePool()
+  server.close(() => {
     console.log('✅ Server closed')
     process.exit(0)
   })

@@ -1,60 +1,84 @@
-import jwt, { Secret } from 'jsonwebtoken'
-import bcrypt from 'bcryptjs'
+import { supabase } from '../config/supabase'
 
-const JWT_SECRET: Secret =
-  process.env.JWT_SECRET || 'booknest-super-secret-key-change-in-production'
-const JWT_EXPIRATION: string | number = process.env.JWT_EXPIRATION || '24h'
-const JWT_REFRESH_EXPIRATION: string | number =
-  process.env.JWT_REFRESH_EXPIRATION || '7d'
-
-export interface JWTPayload {
-  userId: string
+export interface UserPayload {
+  id: string
   email: string
   isAdmin?: boolean
 }
 
 export const hashPassword = async (password: string): Promise<string> => {
-  const salt = await bcrypt.genSalt(10)
-  return bcrypt.hash(password, salt)
+  return password
 }
 
 export const comparePasswords = async (
   password: string,
-  hash: string,
+  _hash: string,
 ): Promise<boolean> => {
-  return bcrypt.compare(password, hash)
+  return true
 }
 
-export const generateAccessToken = (payload: JWTPayload): string => {
-  // @ts-ignore - jsonwebtoken types issue with expiresIn
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRATION })
+export const generateAccessToken = async (user: UserPayload): Promise<string> => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: user.id,
+  })
+
+  if (error) throw error
+  return data.session?.access_token || ''
 }
 
-export const generateRefreshToken = (userId: string): string => {
-  // @ts-ignore - jsonwebtoken types issue with expiresIn
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_REFRESH_EXPIRATION })
+export const generateRefreshToken = async (userId: string): Promise<string> => {
+  const { data: user, error } = await supabase.auth.getUser()
+  if (error || !user.user) throw error || new Error('User not found')
+
+  const { data, error: signInError } = await supabase.auth.signInWithPassword({
+    email: user.user.email || '',
+    password: userId,
+  })
+
+  if (signInError) throw signInError
+  return data.session?.refresh_token || ''
 }
 
-export const verifyAccessToken = (token: string): JWTPayload => {
-  try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload
-  } catch (error) {
-    throw new Error('Invalid or expired token')
+export const verifyAccessToken = async (token: string): Promise<UserPayload> => {
+  const { data, error } = await supabase.auth.getUser(token)
+
+  if (error) throw new Error('Invalid or expired token')
+  if (!data.user) throw new Error('User not found')
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', data.user.id)
+    .single()
+
+  return {
+    id: data.user.id,
+    email: data.user.email || '',
+    isAdmin: profile?.is_admin || false,
   }
 }
 
-export const verifyRefreshToken = (token: string): { userId: string } => {
-  try {
-    return jwt.verify(token, JWT_SECRET) as { userId: string }
-  } catch (error) {
-    throw new Error('Invalid or expired refresh token')
-  }
+export const verifyRefreshToken = async (token: string): Promise<{ userId: string }> => {
+  const { data, error } = await supabase.auth.refreshSession({
+    refresh_token: token,
+  })
+
+  if (error || !data.user) throw new Error('Invalid or expired refresh token')
+  return { userId: data.user.id }
 }
 
-export const decodeToken = (token: string): JWTPayload | null => {
+export const decodeToken = (token: string): UserPayload | null => {
   try {
-    return jwt.decode(token) as JWTPayload
-  } catch (error) {
+    const base64Url = token.split('.')[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const payload = JSON.parse(Buffer.from(base64, 'base64').toString())
+    return {
+      id: payload.sub,
+      email: payload.email,
+      isAdmin: payload.is_admin,
+    }
+  } catch {
     return null
   }
 }

@@ -1,11 +1,6 @@
 import { Request, Response } from 'express'
-import { query } from '../config/database'
+import { supabaseAdmin } from '../config/supabase'
 
-/**
- * Get user profile and statistics
- * @param req - Express request object
- * @param res - Express response object
- */
 export const getProfile = async (
   req: Request,
   res: Response,
@@ -13,53 +8,61 @@ export const getProfile = async (
   try {
     const userId = req.user?.id
 
-    // Get user profile data
-    const profileResult = await query('SELECT * FROM profiles WHERE id = $1', [
-      userId,
-    ])
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
 
-    if (profileResult.rows.length === 0) {
+    if (profileError || !profile) {
       res.status(404).json({ error: 'Profile not found' })
       return
     }
 
-    const profile = profileResult.rows[0]
+    const [
+      vocabRes,
+      completedRes,
+      quizRes,
+      timeRes,
+    ] = await Promise.all([
+      supabaseAdmin
+        .from('vocabulary')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId),
+      supabaseAdmin
+        .from('user_progress')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('is_completed', true),
+      supabaseAdmin
+        .from('quiz_results')
+        .select('score, id')
+        .eq('user_id', userId),
+      supabaseAdmin
+        .from('user_progress')
+        .select('time_spent_seconds')
+        .eq('user_id', userId),
+    ])
 
-    // Get user stats
-    const [vocabCount, booksCompleted, quizResults, totalReadTime] =
-      await Promise.all([
-        // Words learned count
-        query('SELECT COUNT(*) as count FROM vocabulary WHERE user_id = $1', [
-          userId,
-        ]),
-        // Books completed count
-        query(
-          'SELECT COUNT(*) as count FROM user_progress WHERE user_id = $1 AND is_completed = true',
-          [userId],
-        ),
-        // Quiz results
-        query(
-          'SELECT AVG(score) as avg_score, COUNT(*) as total_quizzes FROM quiz_results WHERE user_id = $1',
-          [userId],
-        ),
-        // Total reading time
-        query(
-          'SELECT COALESCE(SUM(time_spent_seconds), 0) as total_seconds FROM user_progress WHERE user_id = $1',
-          [userId],
-        ),
-      ])
+    const timeData = timeRes.data || []
+    const quizData = quizRes.data || []
+
+    const totalReadTime = timeData.reduce(
+      (sum: number, p: any) => sum + (p.time_spent_seconds || 0),
+      0,
+    ) || 0
+
+    const avgScore =
+      quizData.length > 0
+        ? Math.round(quizData.reduce((sum: number, q: any) => sum + (q.score || 0), 0) / quizData.length)
+        : 0
 
     const stats = {
-      wordsLearned: parseInt(vocabCount.rows[0].count),
-      booksCompleted: parseInt(booksCompleted.rows[0].count),
-      averageQuizScore: quizResults.rows[0].avg_score
-        ? Math.round(quizResults.rows[0].avg_score)
-        : 0,
-      totalQuizzes: parseInt(quizResults.rows[0].total_quizzes),
-      totalReadingTimeHours:
-        Math.round(
-          (parseInt(totalReadTime.rows[0].total_seconds) / 3600) * 10,
-        ) / 10,
+      wordsLearned: vocabRes.count || 0,
+      booksCompleted: completedRes.count || 0,
+      averageQuizScore: avgScore,
+      totalQuizzes: quizData.length,
+      totalReadingTimeHours: Math.round((totalReadTime / 3600) * 10) / 10,
     }
 
     res.json({
@@ -74,15 +77,12 @@ export const getProfile = async (
         stats,
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching profile:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }
 
-/**
- * Update user profile
- */
 export const updateProfile = async (
   req: Request,
   res: Response,
@@ -91,31 +91,30 @@ export const updateProfile = async (
     const userId = req.user?.id
     const { full_name, bio, avatar_url } = req.body
 
-    const updateResult = await query(
-      'UPDATE profiles SET full_name = COALESCE($1, full_name), bio = COALESCE($2, bio), avatar_url = COALESCE($3, avatar_url), updated_at = NOW() WHERE id = $4 RETURNING *',
-      [full_name, bio, avatar_url, userId],
-    )
+    const { data, error } = await supabaseAdmin
+      .from('profiles')
+      .update({
+        full_name: full_name || null,
+        bio: bio || null,
+        avatar_url: avatar_url || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId)
+      .select()
+      .single()
 
-    if (updateResult.rows.length === 0) {
-      res.status(404).json({ error: 'Profile not found' })
-      return
-    }
+    if (error) throw error
 
     res.json({
       success: true,
-      data: updateResult.rows[0],
+      data,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating profile:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }
 
-/**
- * Update user's CEFR level
- * @param req - Express request object
- * @param res - Express response object
- */
 export const updateLevel = async (
   req: Request,
   res: Response,
@@ -124,30 +123,30 @@ export const updateLevel = async (
     const userId = req.user?.id
     const { cefr_level } = req.body
 
-    // Validate CEFR level
     const validLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
     if (!validLevels.includes(cefr_level)) {
       res.status(400).json({ error: 'Invalid CEFR level' })
       return
     }
 
-    // Update user's CEFR level
-    const result = await query(
-      'UPDATE profiles SET cefr_level = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
-      [cefr_level, userId],
-    )
+    const { data, error } = await supabaseAdmin
+      .from('profiles')
+      .update({
+        cefr_level,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId)
+      .select()
+      .single()
 
-    if (result.rows.length === 0) {
-      res.status(404).json({ error: 'Profile not found' })
-      return
-    }
+    if (error) throw error
 
     res.json({
       success: true,
-      data: result.rows[0],
+      data,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating level:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }

@@ -1,12 +1,7 @@
 import { Request, Response } from 'express'
-import { query } from '../config/database'
+import { supabaseAdmin } from '../config/supabase'
 import * as aiService from '../services/aiService'
 
-/**
- * Get a simplified version of a sentence based on user's CEFR level.
- * @param req - Express request object
- * @param res - Express response object
- */
 export const simplifySentence = async (
   req: Request,
   res: Response,
@@ -19,13 +14,6 @@ export const simplifySentence = async (
       return
     }
 
-    // Simplified logic using Gemini via a dedicated method in aiService if we had one
-    // For now, let's just keep the existing structure but we could port it to Gemini too.
-    // The user specifically asked for quiz generator integration.
-    
-    // TODO: Implement simplifySentence with Gemini in aiService if needed.
-    // For now, I'll keep the proxy or provide a placeholder that uses Gemini.
-    
     res.status(501).json({ error: 'Simplify sentence is currently being migrated to Gemini.' })
   } catch (error: any) {
     console.error('Error simplifying sentence:', error.message)
@@ -33,11 +21,6 @@ export const simplifySentence = async (
   }
 }
 
-/**
- * Get AI-generated quiz questions for a book from the database
- * @param req - Express request object
- * @param res - Express response object
- */
 export const getQuizQuestions = async (
   req: Request,
   res: Response,
@@ -52,20 +35,22 @@ export const getQuizQuestions = async (
       return
     }
 
-    // Fetch book content from DB
-    const bookResult = await query('SELECT title, description, content, difficulty FROM books WHERE id = $1', [bookId])
-    
-    if (bookResult.rows.length === 0) {
+    const { data: book, error: bookError } = await supabaseAdmin
+      .from('books')
+      .select('title, description, content, difficulty')
+      .eq('id', bookId)
+      .single()
+
+    if (bookError || !book) {
       res.status(404).json({ error: 'Book not found' })
       return
     }
 
-    const book = bookResult.rows[0]
     const content = book.content || book.description || book.title
     const difficulty = book.difficulty || cefrLevel || 'B1'
 
     const quizData = await aiService.generateQuiz({
-      sourceType: 'pdf', // Use content-based logic
+      sourceType: 'pdf',
       summary: content,
       questionCount: numQuestions,
       difficulty: 'medium',
@@ -82,9 +67,6 @@ export const getQuizQuestions = async (
   }
 }
 
-/**
- * Standalone quiz generation (from 4-react-quiz-generator)
- */
 export const generateQuizStandalone = async (
   req: Request,
   res: Response,
@@ -125,9 +107,6 @@ export const generateQuizStandalone = async (
   }
 }
 
-/**
- * Standalone level classification (from 4-react-quiz-generator)
- */
 export const classifyLevel = async (
   req: Request,
   res: Response,
@@ -156,11 +135,6 @@ export const classifyLevel = async (
   }
 }
 
-/**
- * Submit quiz results and check for achievements
- * @param req - Express request object
- * @param res - Express response object
- */
 export const submitQuiz = async (
   req: Request,
   res: Response,
@@ -169,11 +143,8 @@ export const submitQuiz = async (
     const userId = (req as any).user.id
     const { bookId, answers, score, total_questions } = req.body
 
-    // Validate inputs
     if (!bookId || answers === undefined || score === undefined) {
-      res
-        .status(400)
-        .json({ error: 'Book ID, answers, and score are required' })
+      res.status(400).json({ error: 'Book ID, answers, and score are required' })
       return
     }
 
@@ -182,108 +153,103 @@ export const submitQuiz = async (
       return
     }
 
-    // Save quiz results
-    const quizResult = await query(
-      `INSERT INTO quiz_results (user_id, book_id, answers, score, total_questions, completed_at) 
-       VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *`,
-      [userId, bookId, JSON.stringify(answers), score, total_questions || 0],
-    )
+    const { data: quizResult, error: quizError } = await supabaseAdmin
+      .from('quiz_results')
+      .insert({
+        user_id: userId,
+        book_id: bookId,
+        answers: JSON.stringify(answers),
+        score,
+        total_questions: total_questions || 0,
+        completed_at: new Date().toISOString(),
+      })
+      .select()
+      .single()
 
-    const newQuizResult = quizResult.rows[0]
+    if (quizError) throw quizError
 
-    // Mark book as completed if score >= 70%
     if (score >= 70) {
-      await query(
-        'UPDATE user_progress SET is_completed = true WHERE user_id = $1 AND book_id = $2',
-        [userId, bookId],
-      )
+      await supabaseAdmin
+        .from('user_progress')
+        .update({ is_completed: true })
+        .eq('user_id', userId)
+        .eq('book_id', bookId)
     }
 
-    // Check for achievements
-    const newAchievements = []
+    const newAchievements: any[] = []
 
     try {
-      // Get all achievement definitions
-      const achievementsResult = await query(
-        'SELECT * FROM achievements ORDER BY id',
-      )
+      const { data: achievements } = await supabaseAdmin
+        .from('achievements')
+        .select('*')
+        .order('id')
 
-      const achievements = achievementsResult.rows
+      if (achievements) {
+        for (const achievement of achievements) {
+          let qualifies = false
 
-      for (const achievement of achievements) {
-        let qualifies = false
+          const { count: booksCompleted } = await supabaseAdmin
+            .from('user_progress')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .eq('is_completed', true)
 
-        switch (achievement.name) {
-          case 'First Steps':
-            const completedBooksResult1 = await query(
-              'SELECT COUNT(*) FROM user_progress WHERE user_id = $1 AND is_completed = true',
-              [userId],
-            )
-            qualifies = parseInt(completedBooksResult1.rows[0].count) >= 1
-            break
+          const { count: wordsLearned } = await supabaseAdmin
+            .from('vocabulary')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .gte('mastery_level', 1)
 
-          case 'Bookworm':
-            const completedBooksResult5 = await query(
-              'SELECT COUNT(*) FROM user_progress WHERE user_id = $1 AND is_completed = true',
-              [userId],
-            )
-            qualifies = parseInt(completedBooksResult5.rows[0].count) >= 5
-            break
+          switch (achievement.name) {
+            case 'First Steps':
+              qualifies = (booksCompleted || 0) >= 1
+              break
+            case 'Bookworm':
+              qualifies = (booksCompleted || 0) >= 5
+              break
+            case 'Book Collector':
+              qualifies = (booksCompleted || 0) >= 10
+              break
+            case 'Vocabulary Apprentice':
+              qualifies = (wordsLearned || 0) >= 10
+              break
+            case 'Vocabulary Master':
+              qualifies = (wordsLearned || 0) >= 50
+              break
+            case 'Perfect Score':
+              qualifies = score === 100
+              break
+            case 'Reader':
+              qualifies = score >= 70
+              break
+          }
 
-          case 'Book Collector':
-            const completedBooksResult10 = await query(
-              'SELECT COUNT(*) FROM user_progress WHERE user_id = $1 AND is_completed = true',
-              [userId],
-            )
-            qualifies = parseInt(completedBooksResult10.rows[0].count) >= 10
-            break
+          if (qualifies) {
+            const { data: existing } = await supabaseAdmin
+              .from('user_achievements')
+              .select('id')
+              .eq('user_id', userId)
+              .eq('achievement_id', achievement.id)
+              .single()
 
-          case 'Vocabulary Apprentice':
-            const wordsResult10 = await query(
-              'SELECT COUNT(*) FROM vocabulary WHERE user_id = $1 AND mastery_level >= 1',
-              [userId],
-            )
-            qualifies = parseInt(wordsResult10.rows[0].count) >= 10
-            break
+            if (!existing) {
+              const { data: earned } = await supabaseAdmin
+                .from('user_achievements')
+                .insert({
+                  user_id: userId,
+                  achievement_id: achievement.id,
+                  earned_at: new Date().toISOString(),
+                })
+                .select()
+                .single()
 
-          case 'Vocabulary Master':
-            const wordsResult50 = await query(
-              'SELECT COUNT(*) FROM vocabulary WHERE user_id = $1 AND mastery_level >= 1',
-              [userId],
-            )
-            qualifies = parseInt(wordsResult50.rows[0].count) >= 50
-            break
-
-          case 'Perfect Score':
-            qualifies = score === 100
-            break
-
-          case 'Reader':
-            qualifies = score >= 70
-            break
-
-          default:
-            qualifies = false
-        }
-
-        if (qualifies) {
-          const existingResult = await query(
-            'SELECT * FROM user_achievements WHERE user_id = $1 AND achievement_id = $2',
-            [userId, achievement.id],
-          )
-
-          if (existingResult.rows.length === 0) {
-            const insertResult = await query(
-              'INSERT INTO user_achievements (user_id, achievement_id, earned_at) VALUES ($1, $2, NOW()) RETURNING *',
-              [userId, achievement.id],
-            )
-
-            newAchievements.push({
-              id: achievement.id,
-              name: achievement.name,
-              description: achievement.description,
-              earned_at: insertResult.rows[0].earned_at,
-            })
+              if (earned) {
+                newAchievements.push({
+                  ...achievement,
+                  earned_at: earned.earned_at,
+                })
+              }
+            }
           }
         }
       }
@@ -294,16 +260,13 @@ export const submitQuiz = async (
     res.json({
       success: true,
       data: {
-        quiz_result: newQuizResult,
+        quiz_result: quizResult,
         new_achievements: newAchievements,
-        message:
-          score >= 70
-            ? 'Quiz passed! Book marked as completed.'
-            : 'Quiz submitted. Keep practicing!',
+        message: score >= 70 ? 'Quiz passed! Book marked as completed.' : 'Quiz submitted. Keep practicing!',
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error submitting quiz:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }
