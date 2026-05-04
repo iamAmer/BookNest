@@ -8,6 +8,7 @@ import {
   submitQuiz,
   classifyLevel,
   generateQuizStandalone,
+  defineWord,
 } from '../controllers/aiController'
 
 const router = Router()
@@ -19,6 +20,7 @@ const upload = multer({
 })
 
 // AI routes
+router.post('/define', authenticateJWT, defineWord)
 router.post('/simplify', authenticateJWT, simplifySentence)
 router.get('/quiz/:bookId', authenticateJWT, getQuizQuestions)
 router.post(

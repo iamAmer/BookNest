@@ -1,8 +1,16 @@
 import express, { Request, Response } from 'express'
 import cors from 'cors'
-import 'dotenv/config'
+import dotenv from 'dotenv'
+import path from 'path'
 import swaggerJsdoc from 'swagger-jsdoc'
 import swaggerUi from 'swagger-ui-express'
+
+// Load .env from project root (works for both src/ and build/ directories)
+const rootEnvPath = path.resolve(__dirname, '../../.env')
+const backendEnvPath = path.resolve(__dirname, '../.env')
+const envPath = require('fs').existsSync(rootEnvPath) ? rootEnvPath : backendEnvPath
+dotenv.config({ path: envPath })
+console.log(`Loading env from: ${envPath}`)
 
 import authRoutes from './routes/authRoutes'
 import profileRoutes from './routes/profileRoutes'
@@ -28,7 +36,13 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions)
 // Middleware
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: [
+      process.env.FRONTEND_URL || 'http://localhost:5173',
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+    ],
     credentials: true,
   }),
 )

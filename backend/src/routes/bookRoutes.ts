@@ -14,11 +14,11 @@ import {
 
 const router = Router()
 
-// Book routes
+// Book routes - specific routes BEFORE parameterized routes
 router.get('/', authenticateJWT, getBooks)
-router.get('/:id', authenticateJWT, getBookById)
-router.get('/categories', authenticateJWT, getCategories)
 router.get('/trending', authenticateJWT, getTrending)
+router.get('/categories', authenticateJWT, getCategories)
+router.get('/:id', authenticateJWT, getBookById)
 
 // File upload routes
 router.post('/:id/upload-cover', authenticateJWT, uploadCover, handleUploadCover)

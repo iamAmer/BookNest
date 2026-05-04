@@ -9,12 +9,12 @@ import {
 
 const router = Router()
 
-// Public routes
+// Public routes - specific routes BEFORE parameterized routes
 router.get('/', getAchievements)
+router.get('/user/achievements', authenticateJWT, getUserAchievements)
 router.get('/:id', getAchievementById)
 
 // Protected routes
-router.get('/user/achievements', authenticateJWT, getUserAchievements)
 router.post('/check/:bookId', authenticateJWT, checkAchievements)
 
 export default router

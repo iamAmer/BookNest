@@ -1,4 +1,12 @@
-import 'dotenv/config'
+import dotenv from 'dotenv'
+import path from 'path'
+import fs from 'fs'
+
+// Load .env from project root
+const rootEnvPath = path.resolve(__dirname, '../../../.env')
+const backendEnvPath = path.resolve(__dirname, '../../.env')
+const envPath = fs.existsSync(rootEnvPath) ? rootEnvPath : backendEnvPath
+dotenv.config({ path: envPath })
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash'
@@ -21,6 +29,16 @@ export interface ClassificationResult {
 
 const VALID_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
 const VALID_DIFFICULTIES = ['easy', 'medium', 'hard']
+
+const DEFINITION_SCHEMA = {
+  type: 'object',
+  properties: {
+    word: { type: 'string' },
+    definition: { type: 'string' },
+    example: { type: 'string' },
+  },
+  required: ['word', 'definition', 'example'],
+}
 
 const QUIZ_SCHEMA = {
   type: 'object',
@@ -225,6 +243,28 @@ export const classifyLevel = async (params: {
 
   return {
     cefrLevel: parseCefrLevel(data.cefr_level),
+  }
+}
+
+export const defineWord = async (word: string) => {
+  const prompt = [
+    'You are a dictionary assistant for English language learners.',
+    `Define this word: "${word.trim()}"`,
+    'Return a concise, learner-friendly definition (1-2 sentences).',
+    'Also provide a simple example sentence using the word.',
+    'If the word is ambiguous, provide the most common meaning.',
+  ].join('\n')
+
+  const data = await requestGemini({
+    schema: DEFINITION_SCHEMA,
+    parts: [{ text: prompt }],
+    temperature: 0.2,
+  })
+
+  return {
+    word: data.word || word.trim(),
+    definition: data.definition || '',
+    example: data.example || '',
   }
 }
 

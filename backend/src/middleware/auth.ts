@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
-import { supabase } from '../config/supabase'
+import { SupabaseClient, UserResponse } from '@supabase/supabase-js'
+import { supabaseAdmin } from '../config/supabase'
 
 declare global {
   namespace Express {
@@ -11,6 +12,18 @@ declare global {
       }
     }
   }
+}
+
+const retryGetUser = async (token: string, retries = 2, delay = 500): Promise<UserResponse> => {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await supabaseAdmin.auth.getUser(token) as UserResponse
+    } catch (err) {
+      if (i === retries) throw err
+      await new Promise(resolve => setTimeout(resolve, delay * (i + 1)))
+    }
+  }
+  throw new Error('Failed to get user after retries')
 }
 
 export const authenticateJWT = async (
@@ -33,18 +46,23 @@ export const authenticateJWT = async (
   }
 
   try {
-    const { data, error } = await supabase.auth.getUser(token)
+    const result: UserResponse = await retryGetUser(token)
+    const { data, error } = result
 
     if (error || !data.user) {
       res.status(401).json({ error: 'Invalid or expired token' })
       return
     }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('is_admin')
       .eq('id', data.user.id)
       .single()
+
+    if (profileError) {
+      console.error('Profile fetch error:', profileError.message)
+    }
 
     req.user = {
       id: data.user.id,
@@ -52,7 +70,12 @@ export const authenticateJWT = async (
       isAdmin: profile?.is_admin || false,
     }
     next()
-  } catch (err) {
+  } catch (err: any) {
+    console.error('Auth middleware error:', {
+      message: err.message,
+      code: err?.cause?.code || 'UNKNOWN',
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    })
     res.status(401).json({ error: 'Invalid or expired token' })
   }
 }

@@ -1,98 +1,76 @@
-import '@fortawesome/fontawesome-free/css/all.min.css'
-import { createHashRouter, RouterProvider } from 'react-router-dom'
-import { lazy, Suspense } from 'react'
-import './App.css'
-import UserContextProvider from './Components/Context/UserContext.jsx'
-import GuestLayout from './Components/Layout/GuestLayout.jsx'
-import MainLayout from './Components/Layout/MainLayout.jsx'
-import ProtectedRoute from './Components/ProtectedRoute/ProtectedRoute.jsx'
-const GuestPage = lazy(() => import('./Components/GuestPage/GuestPage.jsx'))
-const Login = lazy(() => import('./Components/Login/Login.jsx'))
-const Register = lazy(() => import('./Components/Register/Register.jsx'))
-const PassReseted = lazy(
-  () => import('./Components/PassReseted/PassReseted.jsx'),
-)
-const ResetPass = lazy(() => import('./Components/ResetPass/ResetPass.jsx'))
-const Confirm = lazy(() => import('./Components/Confirm/Confirm.jsx'))
-const ForgetPass = lazy(() => import('./Components/ForgetPass/ForgetPass.jsx'))
-const GuestProtected = lazy(
-  () => import('./Components/GuestProtected/GuestProtected.jsx'),
-)
-const Category = lazy(() => import('./Components/Category/Category.jsx'))
-const CategoryType = lazy(
-  () => import('./Components/CategoryType/CategoryType.jsx'),
-)
-const About = lazy(() => import('./Components/About/About.jsx'))
-const NotFound = lazy(() => import('./Components/NotFound/NotFound.jsx'))
-const Home = lazy(() => import('./Components/Home/Home.jsx'))
-const LearnLanguage = lazy(
-  () => import('./Components/LearnLanguage/LearnLanguage.jsx'),
-)
-const ProfileUser = lazy(
-  () => import('./Components/ProfileUser/ProfileUser.jsx'),
-)
-const AdminPanel = lazy(
-  () => import('./Components/AdminPanel/AdminPanel.jsx'),
-)
-
-function PageLoader() {
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#795420] border-t-transparent" />
-    </div>
-  )
-}
-
-const router = createHashRouter([
-  {
-    path: '/',
-    element: <GuestLayout />,
-    children: [
-      { index: true, element: <GuestPage /> },
-      { path: 'login', element: <Login /> },
-      { path: 'register', element: <Register /> },
-      { path: 'passReseted', element: <PassReseted /> },
-      { path: 'resetPass', element: <ResetPass /> },
-      { path: 'confirm', element: <Confirm /> },
-      { path: 'forgetPass', element: <ForgetPass /> },
-      { path: 'guestprotected', element: <GuestProtected /> },
-      { path: 'category', element: <Category /> },
-      { path: 'about', element: <About /> },
-      {
-        element: <ProtectedRoute />,
-        children: [{ path: 'categoryType', element: <CategoryType /> }],
-      },
-
-      { path: '*', element: <NotFound /> },
-    ],
-  },
-  {
-    path: '/home',
-    element: (
-      <ProtectedRoute>
-        <MainLayout />
-      </ProtectedRoute>
-    ),
-    children: [
-      { index: true, element: <Home /> },
-      { path: 'learnlanguage', element: <LearnLanguage /> },
-      { path: 'category', element: <Category /> },
-      { path: 'categoryType', element: <CategoryType /> },
-      { path: 'profile', element: <ProfileUser /> },
-      { path: 'admin', element: <AdminPanel /> },
-      { path: '*', element: <NotFound /> },
-    ],
-  },
-])
+import { Routes, Route } from 'react-router-dom'
+import AppLayout from './components/layout/AppLayout'
+import AuthLayout from './components/layout/AuthLayout'
+import ProtectedRoute from './components/shared/ProtectedRoute'
+import AdminRoute from './components/shared/AdminRoute'
+import LandingPage from './pages/dashboard/LandingPage'
+import Login from './pages/auth/Login'
+import Register from './pages/auth/Register'
+import ForgotPassword from './pages/auth/ForgotPassword'
+import ResetPassword from './pages/auth/ResetPassword'
+import Dashboard from './pages/dashboard/Dashboard'
+import BooksList from './pages/books/BooksList'
+import BookDetail from './pages/books/BookDetail'
+import QuizPage from './pages/reader/QuizPage'
+import QuizResults from './pages/reader/QuizResults'
+import ClassifyLevel from './pages/reader/ClassifyLevel'
+import BookReaderPage from './pages/reader/BookReaderPage'
+import VocabularyList from './pages/vocabulary/VocabularyList'
+import ProfilePage from './pages/profile/ProfilePage'
+import NotesPage from './pages/notes/NotesPage'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminBooks from './pages/admin/AdminBooks'
+import AdminUsers from './pages/admin/AdminUsers'
+import NotFound from './pages/NotFound'
+// New pages
+import KidsPage from './pages/kids/KidsPage'
+import CategoriesPage from './pages/categories/CategoriesPage'
+import LearnLanguagePage from './pages/language/LearnLanguagePage'
+import AboutPage from './pages/about/AboutPage'
 
 export default function App() {
   return (
-    <UserContextProvider>
-      <Suspense fallback={<PageLoader />}>
-        <RouterProvider router={router} />
-      </Suspense>
-    </UserContextProvider>
+    <Routes>
+      {/* Public routes */}
+      <Route path="/" element={<LandingPage />} />
+      <Route element={<AuthLayout />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+      </Route>
+
+      {/* Protected routes */}
+      <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/books" element={<BooksList />} />
+        <Route path="/books/:id" element={<BookDetail />} />
+        <Route path="/books/:id/quiz" element={<QuizPage />} />
+        <Route path="/books/:id/quiz/results" element={<QuizResults />} />
+        <Route path="/books/:id/read" element={<BookReaderPage />} />
+        <Route path="/books/:id/notes" element={<NotesPage />} />
+        <Route path="/vocabulary" element={<VocabularyList />} />
+        <Route path="/classify-level" element={<ClassifyLevel />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/categories" element={<CategoriesPage />} />
+        <Route path="/learn-language" element={<LearnLanguagePage />} />
+        <Route path="/about" element={<AboutPage />} />
+      </Route>
+
+      {/* Kids route - within app layout for authenticated users */}
+      <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+        <Route path="/kids" element={<KidsPage />} />
+      </Route>
+
+      {/* Admin routes */}
+      <Route element={<AdminRoute><AppLayout /></AdminRoute>}>
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/books" element={<AdminBooks />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
+      </Route>
+
+      {/* 404 */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   )
 }
-
-// export default App

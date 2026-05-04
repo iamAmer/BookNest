@@ -2,6 +2,30 @@ import { Request, Response } from 'express'
 import { supabaseAdmin } from '../config/supabase'
 import * as aiService from '../services/aiService'
 
+export const defineWord = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { word } = req.body
+
+    if (!word || typeof word !== 'string' || word.trim().length === 0) {
+      res.status(400).json({ error: 'Word is required' })
+      return
+    }
+
+    const result = await aiService.defineWord(word.trim())
+
+    res.json({
+      success: true,
+      data: result,
+    })
+  } catch (error: any) {
+    console.error('Error defining word:', error.message)
+    res.status(500).json({ error: 'Failed to fetch definition' })
+  }
+}
+
 export const simplifySentence = async (
   req: Request,
   res: Response,
