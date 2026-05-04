@@ -5,6 +5,7 @@ import {
   getProfile,
   updateProfile,
   updateLevel,
+  updateReadingGoal,
 } from '../controllers/profileController'
 
 const router = Router()
@@ -13,5 +14,6 @@ const router = Router()
 router.get('/', authenticateJWT, getProfile)
 router.patch('/', authenticateJWT, validateContentLength, updateProfile)
 router.patch('/level', authenticateJWT, updateLevel)
+router.patch('/goal', authenticateJWT, validateContentLength, updateReadingGoal)
 
 export default router

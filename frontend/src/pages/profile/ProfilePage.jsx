@@ -23,7 +23,7 @@ export default function ProfilePage() {
   const [library, setLibrary] = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
-  const [form, setForm] = useState({ full_name: '', bio: '' })
+  const [form, setForm] = useState({ full_name: '', bio: '', reading_goal: 12 })
   const [cefrLevel, setCefrLevel] = useState('')
   const [saving, setSaving] = useState(false)
   const { success, error: toastError } = useToast()
@@ -65,6 +65,12 @@ export default function ProfilePage() {
 
       if (cefrLevel !== profile.cefr_level) {
         await profileService.updateLevel(cefrLevel)
+      }
+
+      if (form.reading_goal !== profile.reading_goal) {
+        await profileService.updateGoal({
+          reading_goal: form.reading_goal,
+        })
       }
 
       success('Profile updated!')
@@ -149,6 +155,14 @@ export default function ProfilePage() {
                 })),
               ]}
             />
+            <Input
+              label={`Reading Goal for ${new Date().getFullYear()}`}
+              type="number"
+              min="1"
+              max="365"
+              value={form.reading_goal || profile.reading_goal || 12}
+              onChange={(e) => setForm({ ...form, reading_goal: parseInt(e.target.value) })}
+            />
             <Textarea
               label="Bio"
               value={form.bio}
@@ -157,7 +171,7 @@ export default function ProfilePage() {
             />
             <div className="flex gap-3">
               <Button type="submit" loading={saving}>Save Changes</Button>
-              <Button variant="secondary" onClick={() => { setEditing(false); setForm({ full_name: profile.full_name || '', bio: profile.bio || '' }); setCefrLevel(profile.cefr_level || '') }}>
+              <Button variant="secondary" onClick={() => { setEditing(false); setForm({ full_name: profile.full_name || '', bio: profile.bio || '', reading_goal: profile.reading_goal || 12 }); setCefrLevel(profile.cefr_level || '') }}>
                 Cancel
               </Button>
             </div>
@@ -185,20 +199,28 @@ export default function ProfilePage() {
             </svg>
           </div>
           <div>
-            <p className="text-sm text-brand-500">2024 Goal</p>
-            <p className="text-3xl font-bold text-brand-900">{stats.booksCompleted || 0}/50</p>
+            <p className="text-sm text-brand-500">{profile.reading_goal_year || new Date().getFullYear()} Goal</p>
+            <p className="text-3xl font-bold text-brand-900">
+              {stats.booksCompleted || 0}/{profile.reading_goal || 12}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Reading Activity */}
+      {/* Website Activity */}
       <div className="bg-white rounded-2xl border border-brand-200 shadow-card p-6 mb-8">
-        <h3 className="font-heading font-semibold text-brand-900 mb-4">Reading Activity</h3>
+        <h3 className="font-heading font-semibold text-brand-900 mb-4">Time spent on BookNest</h3>
         <div className="flex items-center justify-between mb-3">
-          <span className="text-sm text-brand-600">This Week</span>
-          <span className="text-sm font-semibold text-brand-900">{stats.totalReadingTimeHours?.toFixed(1) || 0} hours</span>
+          <span className="text-sm font-semibold text-brand-900">
+            {profile.total_site_time_seconds 
+              ? (Math.round((profile.total_site_time_seconds / 3600) * 10) / 10).toFixed(1)
+              : '0.0'} hours
+          </span>
         </div>
-        <ProgressBar value={Math.min((stats.totalReadingTimeHours || 0) / 10 * 100, 100)} max={100} />
+        <ProgressBar 
+          value={Math.min((profile.total_site_time_seconds || 0) / 3600, 100)} 
+          max={100} 
+        />
       </div>
 
       {/* My Library */}

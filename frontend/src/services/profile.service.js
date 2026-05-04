@@ -15,4 +15,12 @@ export const profileService = {
     const { data } = await api.patch('/api/profile/level', { cefr_level })
     return data.data
   },
+
+  async updateGoal({ reading_goal, reading_goal_year }) {
+    const { data } = await api.patch('/api/profile/goal', {
+      reading_goal,
+      reading_goal_year,
+    })
+    return data.data
+  },
 }

@@ -19,6 +19,9 @@ export const getProfile = async (
       return
     }
 
+    const currentYear = new Date().getFullYear()
+    const yearStart = `${currentYear}-01-01`
+
     const [
       vocabRes,
       completedRes,
@@ -40,8 +43,9 @@ export const getProfile = async (
         .eq('user_id', userId),
       supabaseAdmin
         .from('user_progress')
-        .select('time_spent_seconds')
-        .eq('user_id', userId),
+        .select('time_spent_seconds, updated_at')
+        .eq('user_id', userId)
+        .gte('updated_at', yearStart), // Only count time spent this year
     ])
 
     const timeData = timeRes.data || []
@@ -74,6 +78,9 @@ export const getProfile = async (
         avatar_url: profile.avatar_url,
         bio: profile.bio,
         created_at: profile.created_at,
+        reading_goal: profile.reading_goal || 12,
+        reading_goal_year: profile.reading_goal_year || currentYear,
+        total_site_time_seconds: profile.total_site_time_seconds || 0,
         stats,
       },
     })
@@ -89,16 +96,31 @@ export const updateProfile = async (
 ): Promise<void> => {
   try {
     const userId = req.user?.id
-    const { full_name, bio, avatar_url } = req.body
+    const { full_name, bio, avatar_url, total_site_time_seconds } = req.body
+
+    // Build update object dynamically
+    const updates: any = {
+      updated_at: new Date().toISOString(),
+    }
+
+    if (full_name !== undefined) updates.full_name = full_name || null
+    if (bio !== undefined) updates.bio = bio || null
+    if (avatar_url !== undefined) updates.avatar_url = avatar_url || null
+
+    // Handle total_site_time_seconds - increment existing value
+    if (total_site_time_seconds !== undefined) {
+      const { data: currentProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('total_site_time_seconds')
+        .eq('id', userId)
+        .single()
+
+      updates.total_site_time_seconds = (currentProfile?.total_site_time_seconds || 0) + total_site_time_seconds
+    }
 
     const { data, error } = await supabaseAdmin
       .from('profiles')
-      .update({
-        full_name: full_name || null,
-        bio: bio || null,
-        avatar_url: avatar_url || null,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updates)
       .eq('id', userId)
       .select()
       .single()
@@ -147,6 +169,45 @@ export const updateLevel = async (
     })
   } catch (error: any) {
     console.error('Error updating level:', error)
+    res.status(500).json({ error: error.message || 'Internal server error' })
+  }
+}
+
+export const updateReadingGoal = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user?.id
+    const { reading_goal, reading_goal_year } = req.body
+
+    const year = reading_goal_year || new Date().getFullYear()
+    const goal = parseInt(reading_goal) || 12
+
+    if (goal < 1 || goal > 365) {
+      res.status(400).json({ error: 'Goal must be between 1 and 365 books' })
+      return
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('profiles')
+      .update({
+        reading_goal: goal,
+        reading_goal_year: year,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId)
+      .select()
+      .single()
+
+    if (error) throw error
+
+    res.json({
+      success: true,
+      data,
+    })
+  } catch (error: any) {
+    console.error('Error updating reading goal:', error)
     res.status(500).json({ error: error.message || 'Internal server error' })
   }
 }

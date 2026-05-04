@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import { useAuth } from './hooks/useAuth'
 import AppLayout from './components/layout/AppLayout'
 import AuthLayout from './components/layout/AuthLayout'
 import ProtectedRoute from './components/shared/ProtectedRoute'
@@ -27,10 +28,19 @@ import KidsPage from './pages/kids/KidsPage'
 import CategoriesPage from './pages/categories/CategoriesPage'
 import LearnLanguagePage from './pages/language/LearnLanguagePage'
 import AboutPage from './pages/about/AboutPage'
+import { useSessionTracker } from './hooks/useSessionTracker'
+
+function SessionTrackerWrapper() {
+  const { user } = useAuth()
+  useSessionTracker(user?.id)
+  return null
+}
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <SessionTrackerWrapper />
+      <Routes>
       {/* Public routes */}
       <Route path="/" element={<LandingPage />} />
       <Route element={<AuthLayout />}>
@@ -72,5 +82,6 @@ export default function App() {
       {/* 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </>
   )
 }
