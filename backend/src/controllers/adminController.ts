@@ -68,27 +68,13 @@ export const createBook = async (
       author,
       description,
       category,
-      difficulty,
-      total_pages,
       cover_image_url,
     } = req.body
 
-    if (!title || !author || !description || !difficulty) {
+    if (!title || !author || !description) {
       res.status(400).json({
-        error: 'Title, author, description, and difficulty are required',
+        error: 'Title, author, and description are required',
       })
-      return
-    }
-
-    const validDifficulties = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
-    if (!validDifficulties.includes(difficulty)) {
-      res.status(400).json({ error: 'Invalid difficulty level' })
-      return
-    }
-
-    const pages = parseInt(total_pages, 10) || 100
-    if (pages <= 0) {
-      res.status(400).json({ error: 'Total pages must be a positive number' })
       return
     }
 
@@ -98,9 +84,9 @@ export const createBook = async (
         title,
         author,
         description,
-        category,
-        difficulty,
-        total_pages: pages,
+        category: category || null,
+        difficulty: 'B1',
+        total_pages: 100,
         cover_image_url: cover_image_url || null,
         views: 0,
         rating: 0,

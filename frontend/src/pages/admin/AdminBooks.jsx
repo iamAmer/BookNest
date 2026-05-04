@@ -16,14 +16,13 @@ export default function AdminBooks() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingBook, setEditingBook] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [pdfFile, setPdfFile] = useState(null)
+  const [coverFile, setCoverFile] = useState(null)
   const [form, setForm] = useState({
     title: '',
     author: '',
     description: '',
-    difficulty: 'B1',
     category: '',
-    total_pages: 100,
-    cover_image_url: '',
   })
   const { success, error: toastError } = useToast()
 
@@ -45,7 +44,9 @@ export default function AdminBooks() {
 
   function openCreate() {
     setEditingBook(null)
-    setForm({ title: '', author: '', description: '', difficulty: 'B1', category: '', total_pages: 100, cover_image_url: '' })
+    setForm({ title: '', author: '', description: '', category: '' })
+    setPdfFile(null)
+    setCoverFile(null)
     setModalOpen(true)
   }
 
@@ -55,11 +56,10 @@ export default function AdminBooks() {
       title: book.title || '',
       author: book.author || '',
       description: book.description || '',
-      difficulty: book.difficulty || 'B1',
       category: book.category || '',
-      total_pages: book.total_pages || 100,
-      cover_image_url: book.cover_image_url || '',
     })
+    setPdfFile(null)
+    setCoverFile(null)
     setModalOpen(true)
   }
 
@@ -69,17 +69,30 @@ export default function AdminBooks() {
       toastError('Title, author, and description are required')
       return
     }
+    if (!pdfFile) {
+      toastError('Please upload a PDF file')
+      return
+    }
     setSaving(true)
     try {
-      if (editingBook) {
-        await adminService.updateBook(editingBook.id, form)
-        success('Book updated!')
+      let bookId = editingBook?.id
+      if (!editingBook) {
+        const book = await adminService.createBook(form)
+        bookId = book.id
       } else {
-        await adminService.createBook(form)
-        success('Book created!')
+        await adminService.updateBook(editingBook.id, form)
       }
+
+      await adminService.uploadBookContent(bookId, pdfFile)
+      success('PDF uploaded and classified!')
+
+      if (coverFile) {
+        await adminService.uploadBookCover(bookId, coverFile)
+      }
+
       setModalOpen(false)
       fetchBooks()
+      success(editingBook ? 'Book updated!' : 'Book created!')
     } catch (err) {
       toastError(err.response?.data?.error || 'Failed to save book')
     } finally {
@@ -179,90 +192,79 @@ export default function AdminBooks() {
         </div>
       )}
 
-      {/* Create/Edit Modal */}
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editingBook ? 'Edit Book' : 'Add New Book'} size="lg">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-brand-700 mb-1.5">Title *</label>
-              <input
-                type="text"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="input-field"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-brand-700 mb-1.5">Author *</label>
-              <input
-                type="text"
-                value={form.author}
-                onChange={(e) => setForm({ ...form, author: e.target.value })}
-                className="input-field"
-                required
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-brand-700 mb-1.5">Description *</label>
-            <textarea
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="input-field resize-none min-h-[80px]"
-              required
-            />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-brand-700 mb-1.5">CEFR Level</label>
-              <select
-                value={form.difficulty}
-                onChange={(e) => setForm({ ...form, difficulty: e.target.value })}
-                className="input-field"
-              >
-                {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map((l) => (
-                  <option key={l} value={l}>{l}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-brand-700 mb-1.5">Category</label>
-              <input
-                type="text"
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                className="input-field"
-                placeholder="Fiction"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-brand-700 mb-1.5">Total Pages</label>
-              <input
-                type="number"
-                value={form.total_pages}
-                onChange={(e) => setForm({ ...form, total_pages: parseInt(e.target.value) || 0 })}
-                className="input-field"
-                min="1"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-brand-700 mb-1.5">Cover Image URL</label>
-            <input
-              type="url"
-              value={form.cover_image_url}
-              onChange={(e) => setForm({ ...form, cover_image_url: e.target.value })}
-              className="input-field"
-              placeholder="https://..."
-            />
-          </div>
-          <div className="flex gap-3 pt-2">
-            <Button type="submit" loading={saving}>{editingBook ? 'Update Book' : 'Create Book'}</Button>
-            <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancel</Button>
-          </div>
-        </form>
-      </Modal>
+       {/* Create/Edit Modal */}
+       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editingBook ? 'Edit Book' : 'Add New Book'} size="lg">
+         <form onSubmit={handleSubmit} className="space-y-4">
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+             <div>
+               <label className="block text-sm font-medium text-brand-700 mb-1.5">Title *</label>
+               <input
+                 type="text"
+                 value={form.title}
+                 onChange={(e) => setForm({ ...form, title: e.target.value })}
+                 className="input-field"
+                 required
+               />
+             </div>
+             <div>
+               <label className="block text-sm font-medium text-brand-700 mb-1.5">Author *</label>
+               <input
+                 type="text"
+                 value={form.author}
+                 onChange={(e) => setForm({ ...form, author: e.target.value })}
+                 className="input-field"
+                 required
+               />
+             </div>
+           </div>
+           <div>
+             <label className="block text-sm font-medium text-brand-700 mb-1.5">Description *</label>
+             <textarea
+               value={form.description}
+               onChange={(e) => setForm({ ...form, description: e.target.value })}
+               className="input-field resize-none min-h-[80px]"
+               required
+             />
+           </div>
+           <div>
+             <label className="block text-sm font-medium text-brand-700 mb-1.5">Category</label>
+             <input
+               type="text"
+               value={form.category}
+               onChange={(e) => setForm({ ...form, category: e.target.value })}
+               className="input-field"
+               placeholder="Fiction"
+             />
+           </div>
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+             <div>
+               <label className="block text-sm font-medium text-brand-700 mb-1.5">Book PDF *</label>
+               <input
+                 type="file"
+                 accept=".pdf"
+                 onChange={(e) => setPdfFile(e.target.files[0])}
+                 className="input-field"
+                 required={!editingBook}
+               />
+               {pdfFile && <p className="text-xs text-brand-500 mt-1">{pdfFile.name}</p>}
+             </div>
+             <div>
+               <label className="block text-sm font-medium text-brand-700 mb-1.5">Cover Image</label>
+               <input
+                 type="file"
+                 accept="image/*"
+                 onChange={(e) => setCoverFile(e.target.files[0])}
+                 className="input-field"
+               />
+               {coverFile && <p className="text-xs text-brand-500 mt-1">{coverFile.name}</p>}
+             </div>
+           </div>
+           <div className="flex gap-3 pt-2">
+             <Button type="submit" loading={saving}>{editingBook ? 'Update Book' : 'Create Book'}</Button>
+             <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancel</Button>
+           </div>
+         </form>
+       </Modal>
     </div>
   )
 }

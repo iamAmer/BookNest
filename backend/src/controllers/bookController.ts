@@ -2,6 +2,8 @@ import { Request, Response } from 'express'
 import { supabaseAdmin } from '../config/supabase'
 import multer from 'multer'
 import path from 'path'
+const pdfParse = require('pdf-parse')
+import { classifyLevel } from '../services/aiService'
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -181,14 +183,30 @@ export const handleUploadContent = async (
       .from('books')
       .getPublicUrl(filePath)
 
+    const updates: any = { content_url: urlData.publicUrl }
+
+    if (file.mimetype === 'application/pdf') {
+      try {
+        const pdfData = await pdfParse(file.buffer)
+        updates.total_pages = pdfData.numpages || 100
+
+        const classification = await classifyLevel({ pdfBuffer: file.buffer })
+        if (classification.cefrLevel) {
+          updates.difficulty = classification.cefrLevel
+        }
+      } catch (parseError: any) {
+        console.error('PDF processing error:', parseError.message)
+      }
+    }
+
     await supabaseAdmin
       .from('books')
-      .update({ content_url: urlData.publicUrl })
+      .update(updates)
       .eq('id', id)
 
     res.json({
       success: true,
-      data: { url: urlData.publicUrl },
+      data: { url: urlData.publicUrl, ...updates },
     })
   } catch (error: any) {
     console.error('Error uploading content:', error)
